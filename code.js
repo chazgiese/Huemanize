@@ -3181,6 +3181,7 @@ var plugin = (() => {
   var yiq = useMode(definition_default27);
 
   // code.ts
+  var FIXED_STEPS = 11;
   function generateRandomColor() {
     const l = 0.3 + Math.random() * 0.4;
     const c4 = 0.1 + Math.random() * 0.2;
@@ -3210,11 +3211,13 @@ var plugin = (() => {
     if (!baseOklch) throw new Error("Invalid color format");
     const colors = [];
     const easing = easingFunctions[method] || easingFunctions.linear;
+    const sourceLightness = baseOklch.l || 0.5;
+    const totalRange = 0.4;
+    const minLightness = Math.max(0.1, sourceLightness - totalRange / 2);
+    const maxLightness = Math.min(0.9, sourceLightness + totalRange / 2);
     for (let i = 0; i < steps; i++) {
       const t = i / (steps - 1);
       const easedT = easing(t);
-      const minLightness = 0.1;
-      const maxLightness = 0.9;
       const interpolatedLightness = minLightness + (maxLightness - minLightness) * easedT;
       const finalLightness = minLightness + (interpolatedLightness - minLightness) * lightnessRange;
       const interpolatedColor = {
@@ -3232,15 +3235,19 @@ var plugin = (() => {
     if (!baseOklch) throw new Error("Invalid color format");
     const colors = [];
     const easing = easingFunctions[method] || easingFunctions.linear;
+    const sourceChroma = baseOklch.c || 0.1;
+    const totalRange = 0.3;
+    const minChroma = Math.max(0, sourceChroma - totalRange / 2);
+    const maxChroma = Math.min(0.4, sourceChroma + totalRange / 2);
     for (let i = 0; i < steps; i++) {
       const t = i / (steps - 1);
       const easedT = easing(t);
-      const maxChroma = baseOklch.c || 0.1;
-      const interpolatedChroma = maxChroma * easedT * chromaRange;
+      const interpolatedChroma = minChroma + (maxChroma - minChroma) * easedT;
+      const finalChroma = minChroma + (interpolatedChroma - minChroma) * chromaRange;
       const interpolatedColor = {
         mode: "oklch",
         l: baseOklch.l || 0.5,
-        c: interpolatedChroma,
+        c: finalChroma,
         h: baseOklch.h || 0
       };
       colors.push(interpolatedColor);
@@ -3287,9 +3294,10 @@ var plugin = (() => {
         const hex2 = formatHex(color);
         console.log("Color object:", color, "-> Hex:", hex2);
         return hex2;
-      }).filter(Boolean).reverse();
-      console.log("Final hex colors:", hexColors);
-      return hexColors;
+      }).filter(Boolean);
+      const finalColors = hexColors.reverse();
+      console.log("Final hex colors with source color naturally included:", finalColors);
+      return finalColors;
     } catch (error) {
       console.error("Error generating color scale:", error);
       throw error;
@@ -3303,20 +3311,11 @@ var plugin = (() => {
       if (!colorsCollection) {
         colorsCollection = figma.variables.createVariableCollection("Colors");
       }
-      let increment;
-      if (colors.length <= 5) {
-        increment = 100;
-      } else if (colors.length <= 9) {
-        increment = 50;
-      } else {
-        increment = 25;
-      }
-      const totalRange = (colors.length - 1) * increment;
-      const startNumber = 500 - Math.floor(totalRange / 2);
+      const colorNumbers = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
       for (let i = 0; i < colors.length; i++) {
         const color = colors[i];
         if (!color) continue;
-        const colorNumber = startNumber + i * increment;
+        const colorNumber = colorNumbers[i];
         const variableName = `${groupName}/${colorNumber}`;
         const existingVariables = figma.variables.getLocalVariables();
         const existingVariable = existingVariables.find(
@@ -3337,7 +3336,7 @@ var plugin = (() => {
           });
         }
       }
-      figma.notify(`Created ${colors.length} color variables in "${groupName}" group (${increment} increments) within Colors collection`);
+      figma.notify(`Created ${colors.length} color variables in "${groupName}" group within Colors collection`);
     } catch (error) {
       console.error("Error creating color variables:", error);
       throw new Error("Failed to create color variables in Figma");
@@ -3348,7 +3347,7 @@ var plugin = (() => {
       if (msg.type === "generate-scale") {
         const colors = generateColorScale(
           msg.baseColor,
-          msg.steps,
+          FIXED_STEPS,
           msg.lightness,
           msg.chroma,
           msg.method
@@ -3361,7 +3360,7 @@ var plugin = (() => {
       } else if (msg.type === "add-to-figma") {
         const colors = generateColorScale(
           msg.baseColor,
-          msg.steps,
+          FIXED_STEPS,
           msg.lightness,
           msg.chroma,
           msg.method

@@ -14,7 +14,6 @@ interface Color {
 interface PluginMessage {
   type: 'generate-scale' | 'add-to-figma';
   baseColor: string;
-  steps: number;
   lightness: number;
   chroma: number;
   method: string;
@@ -27,6 +26,9 @@ interface PluginResponse {
   error?: string;
   defaultColor?: string;
 }
+
+// Fixed number of steps for consistent color scales (similar to Tailwind CSS)
+const FIXED_STEPS = 11; // 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950
 
 // Generate random color in OKLCH space
 function generateRandomColor(): string {
@@ -67,13 +69,17 @@ function interpolateLightness(baseColor: Color, steps: number, lightnessRange: n
   const colors: Color[] = [];
   const easing = easingFunctions[method as keyof typeof easingFunctions] || easingFunctions.linear;
 
+  // Use the source color's lightness as the center point
+  const sourceLightness = baseOklch.l || 0.5;
+  const totalRange = 0.4; // Total range around the source color
+  const minLightness = Math.max(0.1, sourceLightness - totalRange / 2);
+  const maxLightness = Math.min(0.9, sourceLightness + totalRange / 2);
+
   for (let i = 0; i < steps; i++) {
     const t = i / (steps - 1);
     const easedT = easing(t);
     
-    // Interpolate lightness from 0.1 to 0.9, then apply the lightness range
-    const minLightness = 0.1;
-    const maxLightness = 0.9;
+    // Interpolate lightness around the source color
     const interpolatedLightness = minLightness + (maxLightness - minLightness) * easedT;
     const finalLightness = minLightness + (interpolatedLightness - minLightness) * lightnessRange;
 
@@ -97,18 +103,24 @@ function interpolateChroma(baseColor: Color, steps: number, chromaRange: number,
   const colors: Color[] = [];
   const easing = easingFunctions[method as keyof typeof easingFunctions] || easingFunctions.linear;
 
+  // Use the source color's chroma as the center point
+  const sourceChroma = baseOklch.c || 0.1;
+  const totalRange = 0.3; // Total range around the source color
+  const minChroma = Math.max(0, sourceChroma - totalRange / 2);
+  const maxChroma = Math.min(0.4, sourceChroma + totalRange / 2);
+
   for (let i = 0; i < steps; i++) {
     const t = i / (steps - 1);
     const easedT = easing(t);
     
-    // Interpolate chroma from 0 to the base color's chroma
-    const maxChroma = baseOklch.c || 0.1;
-    const interpolatedChroma = maxChroma * easedT * chromaRange;
+    // Interpolate chroma around the source color
+    const interpolatedChroma = minChroma + (maxChroma - minChroma) * easedT;
+    const finalChroma = minChroma + (interpolatedChroma - minChroma) * chromaRange;
 
     const interpolatedColor: Color = {
       mode: 'oklch',
       l: baseOklch.l || 0.5,
-      c: interpolatedChroma,
+      c: finalChroma,
       h: baseOklch.h || 0
     };
 
@@ -171,15 +183,18 @@ function generateColorScale(baseColor: string, steps: number, lightness: number,
 
     console.log('Combined colors:', combinedColors);
 
-    // Convert to hex format and reverse order so lightest is first (top of vertical display)
+    // Convert to hex format
     const hexColors = combinedColors.map(color => {
       const hex = formatHex(color);
       console.log('Color object:', color, '-> Hex:', hex);
       return hex;
-    }).filter(Boolean).reverse() as string[];
+    }).filter(Boolean) as string[];
 
-    console.log('Final hex colors:', hexColors);
-    return hexColors;
+    // Reverse order so lightest is first (top of vertical display)
+    const finalColors = hexColors.reverse();
+
+    console.log('Final hex colors with source color naturally included:', finalColors);
+    return finalColors;
   } catch (error) {
     console.error('Error generating color scale:', error);
     throw error;
@@ -201,27 +216,15 @@ async function createColorVariables(colors: string[], baseColor: string, groupNa
       colorsCollection = figma.variables.createVariableCollection("Colors");
     }
 
-    // Generate Tailwind-style color names
-    // Determine the increment based on the number of steps
-    let increment: number;
-    if (colors.length <= 5) {
-      increment = 100; // Large changes for small scales
-    } else if (colors.length <= 9) {
-      increment = 50;  // Medium changes for medium scales
-    } else {
-      increment = 25;  // Small changes for large scales
-    }
-    
-    // Calculate the starting number to center the scale around 500
-    const totalRange = (colors.length - 1) * increment;
-    const startNumber = 500 - Math.floor(totalRange / 2);
+    // Generate Tailwind-style color names with fixed steps
+    const colorNumbers = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
     
     // Create variables for each color in the scale
     for (let i = 0; i < colors.length; i++) {
       const color = colors[i];
       if (!color) continue;
       
-      const colorNumber = startNumber + (i * increment);
+      const colorNumber = colorNumbers[i];
       const variableName = `${groupName}/${colorNumber}`;
       
       // Check if variable already exists
@@ -248,7 +251,7 @@ async function createColorVariables(colors: string[], baseColor: string, groupNa
       }
     }
 
-    figma.notify(`Created ${colors.length} color variables in "${groupName}" group (${increment} increments) within Colors collection`);
+    figma.notify(`Created ${colors.length} color variables in "${groupName}" group within Colors collection`);
   } catch (error) {
     console.error('Error creating color variables:', error);
     throw new Error('Failed to create color variables in Figma');
@@ -261,7 +264,7 @@ figma.ui.onmessage = async (msg: PluginMessage) => {
     if (msg.type === 'generate-scale') {
       const colors = generateColorScale(
         msg.baseColor,
-        msg.steps,
+        FIXED_STEPS,
         msg.lightness,
         msg.chroma,
         msg.method
@@ -276,7 +279,7 @@ figma.ui.onmessage = async (msg: PluginMessage) => {
     } else if (msg.type === 'add-to-figma') {
       const colors = generateColorScale(
         msg.baseColor,
-        msg.steps,
+        FIXED_STEPS,
         msg.lightness,
         msg.chroma,
         msg.method

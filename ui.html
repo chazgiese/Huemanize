@@ -299,16 +299,6 @@
         <div class="section-title">Scale Settings</div>
         <div class="input-group">
           <div class="input-container">
-            <input type="text" class="input-with-icon" id="stepsInput" value="9" placeholder="9">
-            <div class="input-icon-container">
-              <div class="input-icon" id="stepsIcon" data-type="steps" data-min="3" data-max="20">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12.6279 9.40624C12.6857 9.50651 12.7014 9.6256 12.6715 9.73742C12.6417 9.84925 12.5688 9.9447 12.4688 10.0029L7.21875 13.0654C7.15185 13.1044 7.0758 13.1249 6.99836 13.1249C6.92092 13.1249 6.84487 13.1044 6.77797 13.0654L1.52797 10.0029C1.42936 9.94362 1.35806 9.84792 1.32951 9.73648C1.30095 9.62504 1.31744 9.50684 1.37539 9.40747C1.43335 9.30809 1.52811 9.23555 1.63916 9.20553C1.75022 9.17552 1.86863 9.19045 1.96875 9.2471L7 12.1811L12.0312 9.2471C12.1315 9.18931 12.2506 9.17362 12.3624 9.20344C12.4743 9.23327 12.5697 9.30619 12.6279 9.40624ZM12.0312 6.6221L7 9.55608L1.96875 6.6221C1.86913 6.5725 1.75436 6.56272 1.64779 6.59476C1.54122 6.6268 1.45087 6.69825 1.39512 6.79456C1.33937 6.89086 1.32241 7.0048 1.3477 7.11317C1.37299 7.22154 1.43863 7.3162 1.53125 7.37788L6.78125 10.4404C6.84815 10.4794 6.9242 10.4999 7.00164 10.4999C7.07908 10.4999 7.15513 10.4794 7.22203 10.4404L12.472 7.37788C12.5225 7.34935 12.5667 7.31109 12.6022 7.26532C12.6378 7.21955 12.6638 7.16718 12.6789 7.11125C12.6941 7.05532 12.6979 6.99694 12.6903 6.93951C12.6827 6.88208 12.6637 6.82673 12.6345 6.77669C12.6053 6.72664 12.5665 6.68289 12.5203 6.64797C12.474 6.61306 12.4213 6.58767 12.3652 6.57329C12.3091 6.55891 12.2507 6.55582 12.1933 6.5642C12.136 6.57257 12.0809 6.59225 12.0312 6.6221ZM1.3125 4.37499C1.31267 4.29836 1.33297 4.22312 1.37136 4.1568C1.40975 4.09048 1.46489 4.03541 1.53125 3.9971L6.78125 0.934596C6.84815 0.895586 6.9242 0.875031 7.00164 0.875031C7.07908 0.875031 7.15513 0.895586 7.22203 0.934596L12.472 3.9971C12.5381 4.03563 12.5929 4.09079 12.6309 4.1571C12.669 4.2234 12.6891 4.29853 12.6891 4.37499C12.6891 4.45145 12.669 4.52657 12.6309 4.59288C12.5929 4.65918 12.5381 4.71435 12.472 4.75288L7.22203 7.81538C7.15513 7.85439 7.07908 7.87494 7.00164 7.87494C6.9242 7.87494 6.84815 7.85439 6.78125 7.81538L1.53125 4.75288C1.46489 4.71456 1.40975 4.65949 1.37136 4.59317C1.33297 4.52685 1.31267 4.45162 1.3125 4.37499ZM2.61844 4.37499L7 6.93108L11.3816 4.37499L7 1.81889L2.61844 4.37499Z" fill="inherit"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div class="input-container">
             <input type="text" class="input-with-icon" id="lightnessInput" value="100%" placeholder="100%">
             <div class="input-icon-container">
               <div class="input-icon" id="lightnessIcon" data-type="lightness" data-min="0" data-max="100">
@@ -392,8 +382,6 @@
     const colorPreview = document.getElementById('colorPreview');
     const colorError = document.getElementById('colorError');
     const interpolationMethod = document.getElementById('interpolationMethod');
-    const stepsInput = document.getElementById('stepsInput');
-    const stepsIcon = document.getElementById('stepsIcon');
     const lightnessInput = document.getElementById('lightnessInput');
     const lightnessIcon = document.getElementById('lightnessIcon');
     const chromaInput = document.getElementById('chromaInput');
@@ -414,8 +402,6 @@
     colorInput.addEventListener('input', updateColorPreview);
     colorInput.addEventListener('blur', validateColor);
     colorInput.addEventListener('focus', selectAllText);
-    stepsInput.addEventListener('input', () => debounce(autoGenerateScale, 100));
-    stepsInput.addEventListener('focus', selectAllText);
     lightnessInput.addEventListener('input', () => debounce(autoGenerateScale, 100));
     lightnessInput.addEventListener('focus', selectAllText);
     chromaInput.addEventListener('input', () => debounce(autoGenerateScale, 100));
@@ -425,7 +411,6 @@
     addToFigmaBtn.addEventListener('click', addToFigma);
 
     // Drag functionality for scale settings
-    setupDragIcon(stepsIcon, stepsInput, false);
     setupDragIcon(lightnessIcon, lightnessInput, true);
     setupDragIcon(chromaIcon, chromaInput, true);
 
@@ -525,7 +510,6 @@
         return;
       }
       
-      const steps = parseInt(stepsInput.value) || 9;
       const lightness = parseInt(lightnessInput.value.replace('%', '')) / 100;
       const chroma = parseInt(chromaInput.value.replace('%', '')) / 100;
       const method = interpolationMethod.value;
@@ -535,7 +519,6 @@
         pluginMessage: {
           type: 'generate-scale',
           baseColor,
-          steps,
           lightness,
           chroma,
           method
@@ -558,7 +541,6 @@
       if (!validateColor()) return;
 
       const baseColor = colorInput.value;
-      const steps = parseInt(stepsInput.value) || 9;
       const lightness = parseInt(lightnessInput.value.replace('%', '')) / 100;
       const chroma = parseInt(chromaInput.value.replace('%', '')) / 100;
       const method = interpolationMethod.value;
@@ -568,7 +550,6 @@
         pluginMessage: {
           type: 'add-to-figma',
           baseColor,
-          steps,
           lightness,
           chroma,
           method,
