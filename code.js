@@ -3181,6 +3181,18 @@ var plugin = (() => {
   var yiq = useMode(definition_default27);
 
   // code.ts
+  function generateRandomColor() {
+    const l = 0.3 + Math.random() * 0.4;
+    const c4 = 0.1 + Math.random() * 0.2;
+    const h = Math.random() * 360;
+    const color = {
+      mode: "oklch",
+      l,
+      c: c4,
+      h
+    };
+    return formatHex(color);
+  }
   var easingFunctions = {
     "linear": (t) => t,
     "bezier": (t) => t * t * (3 - 2 * t),
@@ -3237,6 +3249,18 @@ var plugin = (() => {
   }
   function generateColorScale(baseColor, steps, lightness, chroma, method) {
     try {
+      if (!baseColor || typeof baseColor !== "string") {
+        throw new Error("Base color is required");
+      }
+      if (steps < 2 || steps > 50) {
+        throw new Error("Steps must be between 2 and 50");
+      }
+      if (lightness < 0 || lightness > 1) {
+        throw new Error("Lightness must be between 0 and 1");
+      }
+      if (chroma < 0 || chroma > 1) {
+        throw new Error("Chroma must be between 0 and 1");
+      }
       const parsedColor = oklch(baseColor);
       if (!parsedColor) {
         throw new Error("Invalid color format");
@@ -3263,7 +3287,7 @@ var plugin = (() => {
         const hex2 = formatHex(color);
         console.log("Color object:", color, "-> Hex:", hex2);
         return hex2;
-      }).filter(Boolean);
+      }).filter(Boolean).reverse();
       console.log("Final hex colors:", hexColors);
       return hexColors;
     } catch (error) {
@@ -3347,5 +3371,14 @@ var plugin = (() => {
       figma.ui.postMessage(response);
     }
   };
-  figma.showUI(__html__, { width: 320, height: 600 });
+  figma.showUI(__html__, {
+    width: 640,
+    height: 400,
+    themeColors: true
+  });
+  var initialColor = generateRandomColor();
+  figma.ui.postMessage({
+    type: "init",
+    defaultColor: initialColor
+  });
 })();

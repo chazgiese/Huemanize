@@ -15,7 +15,7 @@
       background: #f5f5f5;
       color: #333;
       padding: 16px;
-      width: 320px;
+      width: 480px;
     }
 
     .container {
@@ -30,6 +30,21 @@
       font-weight: 600;
       margin-bottom: 16px;
       color: #1a1a1a;
+    }
+
+    .main-layout {
+      display: flex;
+      gap: 20px;
+    }
+
+    .controls-panel {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .preview-panel {
+      width: 120px;
+      flex-shrink: 0;
     }
 
     .section {
@@ -131,22 +146,45 @@
 
     .color-scale {
       display: flex;
-      gap: 2px;
+      flex-direction: column;
+      gap: 1px;
       margin: 16px 0;
       border-radius: 6px;
       overflow: hidden;
       border: 1px solid #ddd;
+      height: 200px;
     }
 
     .color-swatch {
       flex: 1;
-      height: 40px;
       cursor: pointer;
       transition: transform 0.1s ease;
+      position: relative;
     }
 
     .color-swatch:hover {
-      transform: scaleY(1.1);
+      transform: scaleX(1.02);
+    }
+
+    .color-swatch::after {
+      content: attr(data-color);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+    }
+
+    .color-swatch:hover::after {
+      opacity: 1;
     }
 
     .button {
@@ -195,61 +233,82 @@
       opacity: 0.6;
       pointer-events: none;
     }
+
+    .preview-placeholder {
+      height: 200px;
+      background: #f8f8f8;
+      border: 2px dashed #ddd;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-size: 12px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>🎨 Huemanize</h1>
     
-    <div class="section">
-      <div class="section-title">Base Color</div>
-      <div class="input-group">
-        <input type="text" id="colorInput" placeholder="#FF6B6B" maxlength="7">
-        <div class="color-preview" id="colorPreview"></div>
-      </div>
-      <div id="colorError" class="error" style="display: none;"></div>
-    </div>
+    <div class="main-layout">
+      <div class="controls-panel">
+        <div class="section">
+          <div class="section-title">Base Color</div>
+          <div class="input-group">
+            <input type="text" id="colorInput" placeholder="#FF6B6B" maxlength="7">
+            <div class="color-preview" id="colorPreview"></div>
+          </div>
+          <div id="colorError" class="error" style="display: none;"></div>
+        </div>
 
-    <div class="section">
-      <div class="section-title">Interpolation Method</div>
-      <select id="interpolationMethod">
-        <option value="linear">Linear</option>
-        <option value="bezier">Bezier</option>
-        <option value="catmull-rom">Catmull-Rom</option>
-        <option value="ease-in">Ease In</option>
-        <option value="ease-out">Ease Out</option>
-        <option value="ease-in-out">Ease In-Out</option>
-      </select>
-    </div>
+        <div class="section">
+          <div class="section-title">Interpolation Method</div>
+          <select id="interpolationMethod">
+            <option value="linear">Linear</option>
+            <option value="bezier">Bezier</option>
+            <option value="catmull-rom">Catmull-Rom</option>
+            <option value="ease-in">Ease In</option>
+            <option value="ease-out">Ease Out</option>
+            <option value="ease-in-out">Ease In-Out</option>
+          </select>
+        </div>
 
-    <div class="section">
-      <div class="section-title">Scale Settings</div>
-      <div class="range-group">
-        <span class="range-label">Steps:</span>
-        <input type="range" id="stepsRange" min="3" max="20" value="9">
-        <span class="range-value" id="stepsValue">9</span>
+        <div class="section">
+          <div class="section-title">Scale Settings</div>
+          <div class="range-group">
+            <span class="range-label">Steps:</span>
+            <input type="range" id="stepsRange" min="3" max="20" value="9">
+            <span class="range-value" id="stepsValue">9</span>
+          </div>
+          <div class="range-group">
+            <span class="range-label">Lightness:</span>
+            <input type="range" id="lightnessRange" min="0" max="100" value="100">
+            <span class="range-value" id="lightnessValue">100%</span>
+          </div>
+          <div class="range-group">
+            <span class="range-label">Chroma:</span>
+            <input type="range" id="chromaRange" min="0" max="100" value="100">
+            <span class="range-value" id="chromaValue">100%</span>
+          </div>
+        </div>
+
+        <button class="button button-secondary" id="generateBtn">Regenerate Scale</button>
+        <button class="button button-primary" id="addToFigmaBtn">Add to Figma Variables</button>
+        
+        <div id="message" style="display: none;"></div>
       </div>
-      <div class="range-group">
-        <span class="range-label">Lightness:</span>
-        <input type="range" id="lightnessRange" min="0" max="100" value="100">
-        <span class="range-value" id="lightnessValue">100%</span>
-      </div>
-      <div class="range-group">
-        <span class="range-label">Chroma:</span>
-        <input type="range" id="chromaRange" min="0" max="100" value="100">
-        <span class="range-value" id="chromaValue">100%</span>
+
+      <div class="preview-panel">
+        <div class="section-title">Scale Preview</div>
+        <div class="color-scale" id="colorScale">
+          <div class="preview-placeholder">
+            Generate a scale<br>to see preview
+          </div>
+        </div>
       </div>
     </div>
-
-    <div class="section">
-      <div class="section-title">Color Scale Preview</div>
-      <div class="color-scale" id="colorScale"></div>
-    </div>
-
-    <button class="button button-secondary" id="generateBtn">Generate Scale</button>
-    <button class="button button-primary" id="addToFigmaBtn">Add to Figma Variables</button>
-    
-    <div id="message" style="display: none;"></div>
   </div>
 
   <script>
@@ -287,12 +346,20 @@
     const addToFigmaBtn = document.getElementById('addToFigmaBtn');
     const message = document.getElementById('message');
 
+    // Debounce function to prevent too many rapid calls
+    let debounceTimer;
+    function debounce(func, delay) {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(func, delay);
+    }
+
     // Event Listeners
     colorInput.addEventListener('input', updateColorPreview);
     colorInput.addEventListener('blur', validateColor);
     stepsRange.addEventListener('input', updateStepsValue);
     lightnessRange.addEventListener('input', updateLightnessValue);
     chromaRange.addEventListener('input', updateChromaValue);
+    interpolationMethod.addEventListener('change', () => debounce(autoGenerateScale, 100));
     generateBtn.addEventListener('click', generateColorScale);
     addToFigmaBtn.addEventListener('click', addToFigma);
 
@@ -301,12 +368,21 @@
     updateStepsValue();
     updateLightnessValue();
     updateChromaValue();
+    
+    // Auto-generate initial scale after a short delay to ensure UI is ready
+    setTimeout(() => {
+      const initialColor = colorInput.value.trim();
+      if (initialColor && isValidHex(initialColor)) {
+        autoGenerateScale();
+      }
+    }, 200);
 
     function updateColorPreview() {
       const color = colorInput.value;
       if (isValidHex(color)) {
         colorPreview.style.backgroundColor = color;
         colorError.style.display = 'none';
+        debounce(autoGenerateScale, 150);
       } else {
         colorPreview.style.backgroundColor = '#f0f0f0';
       }
@@ -326,29 +402,27 @@
 
     function updateStepsValue() {
       stepsValue.textContent = stepsRange.value;
+      debounce(autoGenerateScale, 100);
     }
 
     function updateLightnessValue() {
       lightnessValue.textContent = lightnessRange.value + '%';
+      debounce(autoGenerateScale, 100);
     }
 
     function updateChromaValue() {
       chromaValue.textContent = chromaRange.value + '%';
+      debounce(autoGenerateScale, 100);
     }
 
-    function showMessage(text, type = 'success') {
-      message.textContent = text;
-      message.className = type;
-      message.style.display = 'block';
-      setTimeout(() => {
-        message.style.display = 'none';
-      }, 3000);
-    }
-
-    function generateColorScale() {
-      if (!validateColor()) return;
-
-      const baseColor = colorInput.value;
+    function autoGenerateScale() {
+      const baseColor = colorInput.value.trim();
+      
+      // Don't generate if color is empty or invalid
+      if (!baseColor || !isValidHex(baseColor)) {
+        return;
+      }
+      
       const steps = parseInt(stepsRange.value);
       const lightness = parseInt(lightnessRange.value) / 100;
       const chroma = parseInt(chromaRange.value) / 100;
@@ -365,8 +439,21 @@
           method
         }
       }, '*');
+    }
 
-      generateBtn.classList.add('loading');
+    function showMessage(text, type = 'success') {
+      message.textContent = text;
+      message.className = type;
+      message.style.display = 'block';
+      setTimeout(() => {
+        message.style.display = 'none';
+      }, 3000);
+    }
+
+    function generateColorScale() {
+      // This function is now just a wrapper for autoGenerateScale
+      // Kept for the button click event
+      autoGenerateScale();
     }
 
     function addToFigma() {
@@ -394,17 +481,18 @@
 
     // Listen for messages from plugin
     window.addEventListener('message', (event) => {
-      const { type, colors, error } = event.data.pluginMessage;
+      const { type, colors, error, defaultColor } = event.data.pluginMessage;
 
-      if (type === 'scale-generated') {
+      if (type === 'init' && defaultColor) {
+        colorInput.value = defaultColor;
+        updateColorPreview();
+      } else if (type === 'scale-generated') {
         displayColorScale(colors);
-        generateBtn.classList.remove('loading');
       } else if (type === 'added-to-figma') {
         showMessage('Color scale added to Figma variables!');
         addToFigmaBtn.classList.remove('loading');
       } else if (type === 'error') {
         showMessage(error, 'error');
-        generateBtn.classList.remove('loading');
         addToFigmaBtn.classList.remove('loading');
       }
     });
@@ -415,6 +503,7 @@
         const swatch = document.createElement('div');
         swatch.className = 'color-swatch';
         swatch.style.backgroundColor = color;
+        swatch.setAttribute('data-color', color);
         swatch.title = color;
         colorScale.appendChild(swatch);
       });

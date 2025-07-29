@@ -21,9 +21,27 @@ interface PluginMessage {
 }
 
 interface PluginResponse {
-  type: 'scale-generated' | 'added-to-figma' | 'error';
+  type: 'scale-generated' | 'added-to-figma' | 'error' | 'init';
   colors?: string[];
   error?: string;
+  defaultColor?: string;
+}
+
+// Generate random color in OKLCH space
+function generateRandomColor(): string {
+  // Generate random values for OKLCH
+  const l = 0.3 + Math.random() * 0.4; // Lightness between 0.3 and 0.7 for good visibility
+  const c = 0.1 + Math.random() * 0.2; // Chroma between 0.1 and 0.3 for moderate saturation
+  const h = Math.random() * 360; // Hue between 0 and 360
+  
+  const color: Color = {
+    mode: 'oklch',
+    l,
+    c,
+    h
+  };
+  
+  return formatHex(color);
 }
 
 // Interpolation easing functions
@@ -101,6 +119,23 @@ function interpolateChroma(baseColor: Color, steps: number, chromaRange: number,
 
 function generateColorScale(baseColor: string, steps: number, lightness: number, chroma: number, method: string): string[] {
   try {
+    // Validate input parameters
+    if (!baseColor || typeof baseColor !== 'string') {
+      throw new Error('Base color is required');
+    }
+    
+    if (steps < 2 || steps > 50) {
+      throw new Error('Steps must be between 2 and 50');
+    }
+    
+    if (lightness < 0 || lightness > 1) {
+      throw new Error('Lightness must be between 0 and 1');
+    }
+    
+    if (chroma < 0 || chroma > 1) {
+      throw new Error('Chroma must be between 0 and 1');
+    }
+    
     // Parse the base color
     const parsedColor = oklch(baseColor);
     if (!parsedColor) {
@@ -135,12 +170,12 @@ function generateColorScale(baseColor: string, steps: number, lightness: number,
 
     console.log('Combined colors:', combinedColors);
 
-    // Convert to hex format
+    // Convert to hex format and reverse order so lightest is first (top of vertical display)
     const hexColors = combinedColors.map(color => {
       const hex = formatHex(color);
       console.log('Color object:', color, '-> Hex:', hex);
       return hex;
-    }).filter(Boolean) as string[];
+    }).filter(Boolean).reverse() as string[];
 
     console.log('Final hex colors:', hexColors);
     return hexColors;
@@ -253,5 +288,16 @@ figma.ui.onmessage = async (msg: PluginMessage) => {
   }
 };
 
-// Show the UI
-figma.showUI(__html__, { width: 320, height: 600 });
+// Show the UI first
+figma.showUI(__html__, { 
+  width: 640, 
+  height: 400,
+  themeColors: true
+});
+
+// Send initial random color after UI is shown
+const initialColor = generateRandomColor();
+figma.ui.postMessage({
+  type: 'init',
+  defaultColor: initialColor
+} as PluginResponse);
