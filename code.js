@@ -3206,54 +3206,6 @@ var plugin = (() => {
     "ease-out": (t) => 1 - Math.pow(1 - t, 2),
     "ease-in-out": (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
   };
-  function interpolateLightness(baseColor, steps, lightnessRange, method) {
-    const baseOklch = oklch(baseColor);
-    if (!baseOklch) throw new Error("Invalid color format");
-    const colors = [];
-    const easing = easingFunctions[method] || easingFunctions.linear;
-    const sourceLightness = baseOklch.l || 0.5;
-    const totalRange = 0.4;
-    const minLightness = Math.max(0.1, sourceLightness - totalRange / 2);
-    const maxLightness = Math.min(0.9, sourceLightness + totalRange / 2);
-    for (let i = 0; i < steps; i++) {
-      const t = i / (steps - 1);
-      const easedT = easing(t);
-      const interpolatedLightness = minLightness + (maxLightness - minLightness) * easedT;
-      const finalLightness = minLightness + (interpolatedLightness - minLightness) * lightnessRange;
-      const interpolatedColor = {
-        mode: "oklch",
-        l: finalLightness,
-        c: baseOklch.c || 0.1,
-        h: baseOklch.h || 0
-      };
-      colors.push(interpolatedColor);
-    }
-    return colors;
-  }
-  function interpolateChroma(baseColor, steps, chromaRange, method) {
-    const baseOklch = oklch(baseColor);
-    if (!baseOklch) throw new Error("Invalid color format");
-    const colors = [];
-    const easing = easingFunctions[method] || easingFunctions.linear;
-    const sourceChroma = baseOklch.c || 0.1;
-    const totalRange = 0.3;
-    const minChroma = Math.max(0, sourceChroma - totalRange / 2);
-    const maxChroma = Math.min(0.4, sourceChroma + totalRange / 2);
-    for (let i = 0; i < steps; i++) {
-      const t = i / (steps - 1);
-      const easedT = easing(t);
-      const interpolatedChroma = minChroma + (maxChroma - minChroma) * easedT;
-      const finalChroma = minChroma + (interpolatedChroma - minChroma) * chromaRange;
-      const interpolatedColor = {
-        mode: "oklch",
-        l: baseOklch.l || 0.5,
-        c: finalChroma,
-        h: baseOklch.h || 0
-      };
-      colors.push(interpolatedColor);
-    }
-    return colors;
-  }
   function generateColorScale(baseColor, steps, lightness, chroma, method) {
     try {
       if (!baseColor || typeof baseColor !== "string") {
@@ -3273,24 +3225,30 @@ var plugin = (() => {
         throw new Error("Invalid color format");
       }
       console.log("Base color parsed:", parsedColor);
-      const lightnessColors = interpolateLightness(parsedColor, steps, lightness, method);
-      const chromaColors = interpolateChroma(parsedColor, steps, chroma, method);
-      const combinedColors = [];
+      const colors = [];
+      const easing = easingFunctions[method] || easingFunctions.linear;
+      const minLightness = 0.05;
+      const maxLightness = 0.95;
+      const baseChroma = parsedColor.c || 0.1;
+      const maxChroma = Math.min(0.4, baseChroma * 2);
       for (let i = 0; i < steps; i++) {
-        const lightnessColor = lightnessColors[i];
-        const chromaColor = chromaColors[i];
-        if (lightnessColor && chromaColor) {
-          const combinedColor = {
-            mode: "oklch",
-            l: lightnessColor.l || 0.5,
-            c: chromaColor.c || 0.1,
-            h: parsedColor.h || 0
-          };
-          combinedColors.push(combinedColor);
-        }
+        const t = i / (steps - 1);
+        const easedT = easing(t);
+        const interpolatedLightness = minLightness + (maxLightness - minLightness) * easedT;
+        const finalLightness = minLightness + (interpolatedLightness - minLightness) * lightness;
+        const chromaCurve = Math.sin(easedT * Math.PI);
+        const interpolatedChroma = baseChroma * chromaCurve * chroma;
+        const finalChroma = Math.min(maxChroma, Math.max(0, interpolatedChroma));
+        const color = {
+          mode: "oklch",
+          l: finalLightness,
+          c: finalChroma,
+          h: parsedColor.h || 0
+        };
+        colors.push(color);
       }
-      console.log("Combined colors:", combinedColors);
-      const hexColors = combinedColors.map((color) => {
+      console.log("Combined colors:", colors);
+      const hexColors = colors.map((color) => {
         const hex2 = formatHex(color);
         console.log("Color object:", color, "-> Hex:", hex2);
         return hex2;

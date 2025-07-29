@@ -61,74 +61,7 @@ const easingFunctions = {
   'ease-in-out': (t: number) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
 };
 
-// Color interpolation functions
-function interpolateLightness(baseColor: Color, steps: number, lightnessRange: number, method: string): Color[] {
-  const baseOklch = oklch(baseColor);
-  if (!baseOklch) throw new Error('Invalid color format');
 
-  const colors: Color[] = [];
-  const easing = easingFunctions[method as keyof typeof easingFunctions] || easingFunctions.linear;
-
-  // Use the source color's lightness as the center point
-  const sourceLightness = baseOklch.l || 0.5;
-  const totalRange = 0.4; // Total range around the source color
-  const minLightness = Math.max(0.1, sourceLightness - totalRange / 2);
-  const maxLightness = Math.min(0.9, sourceLightness + totalRange / 2);
-
-  for (let i = 0; i < steps; i++) {
-    const t = i / (steps - 1);
-    const easedT = easing(t);
-    
-    // Interpolate lightness around the source color
-    const interpolatedLightness = minLightness + (maxLightness - minLightness) * easedT;
-    const finalLightness = minLightness + (interpolatedLightness - minLightness) * lightnessRange;
-
-    const interpolatedColor: Color = {
-      mode: 'oklch',
-      l: finalLightness,
-      c: baseOklch.c || 0.1,
-      h: baseOklch.h || 0
-    };
-
-    colors.push(interpolatedColor);
-  }
-
-  return colors;
-}
-
-function interpolateChroma(baseColor: Color, steps: number, chromaRange: number, method: string): Color[] {
-  const baseOklch = oklch(baseColor);
-  if (!baseOklch) throw new Error('Invalid color format');
-
-  const colors: Color[] = [];
-  const easing = easingFunctions[method as keyof typeof easingFunctions] || easingFunctions.linear;
-
-  // Use the source color's chroma as the center point
-  const sourceChroma = baseOklch.c || 0.1;
-  const totalRange = 0.3; // Total range around the source color
-  const minChroma = Math.max(0, sourceChroma - totalRange / 2);
-  const maxChroma = Math.min(0.4, sourceChroma + totalRange / 2);
-
-  for (let i = 0; i < steps; i++) {
-    const t = i / (steps - 1);
-    const easedT = easing(t);
-    
-    // Interpolate chroma around the source color
-    const interpolatedChroma = minChroma + (maxChroma - minChroma) * easedT;
-    const finalChroma = minChroma + (interpolatedChroma - minChroma) * chromaRange;
-
-    const interpolatedColor: Color = {
-      mode: 'oklch',
-      l: baseOklch.l || 0.5,
-      c: finalChroma,
-      h: baseOklch.h || 0
-    };
-
-    colors.push(interpolatedColor);
-  }
-
-  return colors;
-}
 
 function generateColorScale(baseColor: string, steps: number, lightness: number, chroma: number, method: string): string[] {
   try {
@@ -157,34 +90,43 @@ function generateColorScale(baseColor: string, steps: number, lightness: number,
 
     console.log('Base color parsed:', parsedColor);
 
-    // Generate colors based on lightness interpolation
-    const lightnessColors = interpolateLightness(parsedColor, steps, lightness, method);
+    // Generate a proper color scale from light to dark
+    const colors: Color[] = [];
+    const easing = easingFunctions[method as keyof typeof easingFunctions] || easingFunctions.linear;
     
-    // Generate colors based on chroma interpolation
-    const chromaColors = interpolateChroma(parsedColor, steps, chroma, method);
-    
-    // Combine both interpolations by averaging the lightness and chroma values
-    const combinedColors: Color[] = [];
+    // Create a full scale from very light to very dark
+    const minLightness = 0.05; // Very light (almost white)
+    const maxLightness = 0.95; // Very dark (almost black)
+    const baseChroma = parsedColor.c || 0.1;
+    const maxChroma = Math.min(0.4, baseChroma * 2);
     
     for (let i = 0; i < steps; i++) {
-      const lightnessColor = lightnessColors[i];
-      const chromaColor = chromaColors[i];
+      const t = i / (steps - 1);
+      const easedT = easing(t);
       
-      if (lightnessColor && chromaColor) {
-        const combinedColor: Color = {
-          mode: 'oklch',
-          l: lightnessColor.l || 0.5,
-          c: chromaColor.c || 0.1,
-          h: parsedColor.h || 0
-        };
-        combinedColors.push(combinedColor);
-      }
+      // Interpolate lightness from very light to very dark
+      const interpolatedLightness = minLightness + (maxLightness - minLightness) * easedT;
+      const finalLightness = minLightness + (interpolatedLightness - minLightness) * lightness;
+      
+      // Create a bell curve for chroma - higher in the middle, lower at extremes
+      const chromaCurve = Math.sin(easedT * Math.PI);
+      const interpolatedChroma = baseChroma * chromaCurve * chroma;
+      const finalChroma = Math.min(maxChroma, Math.max(0, interpolatedChroma));
+      
+      const color: Color = {
+        mode: 'oklch',
+        l: finalLightness,
+        c: finalChroma,
+        h: parsedColor.h || 0
+      };
+      
+      colors.push(color);
     }
 
-    console.log('Combined colors:', combinedColors);
+    console.log('Combined colors:', colors);
 
     // Convert to hex format
-    const hexColors = combinedColors.map(color => {
+    const hexColors = colors.map(color => {
       const hex = formatHex(color);
       console.log('Color object:', color, '-> Hex:', hex);
       return hex;
