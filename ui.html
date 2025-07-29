@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Huemanize - Perceptual Color Interpolation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      padding: 16px;
+      width: 320px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #1a1a1a;
+    }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: #666;
+    }
+
+    .input-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #18a0fb;
+      box-shadow: 0 0 0 2px rgba(24, 160, 251, 0.2);
+    }
+
+    .color-preview {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 2px solid #ddd;
+      cursor: pointer;
+    }
+
+    .color-preview:hover {
+      border-color: #18a0fb;
+    }
+
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #18a0fb;
+    }
+
+    .range-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .range-label {
+      font-size: 12px;
+      color: #666;
+      min-width: 60px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: #ddd;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #18a0fb;
+      cursor: pointer;
+    }
+
+    .range-value {
+      font-size: 12px;
+      color: #666;
+      min-width: 30px;
+      text-align: right;
+    }
+
+    .color-scale {
+      display: flex;
+      gap: 2px;
+      margin: 16px 0;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid #ddd;
+    }
+
+    .color-swatch {
+      flex: 1;
+      height: 40px;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+
+    .color-swatch:hover {
+      transform: scaleY(1.1);
+    }
+
+    .button {
+      width: 100%;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .button-primary {
+      background: #18a0fb;
+      color: white;
+    }
+
+    .button-primary:hover {
+      background: #0d8ce6;
+    }
+
+    .button-secondary {
+      background: #f0f0f0;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .button-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    .error {
+      color: #e74c3c;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .success {
+      color: #27ae60;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Huemanize</h1>
+    
+    <div class="section">
+      <div class="section-title">Base Color</div>
+      <div class="input-group">
+        <input type="text" id="colorInput" placeholder="#FF6B6B" maxlength="7">
+        <div class="color-preview" id="colorPreview"></div>
+      </div>
+      <div id="colorError" class="error" style="display: none;"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Interpolation Method</div>
+      <select id="interpolationMethod">
+        <option value="linear">Linear</option>
+        <option value="bezier">Bezier</option>
+        <option value="catmull-rom">Catmull-Rom</option>
+        <option value="ease-in">Ease In</option>
+        <option value="ease-out">Ease Out</option>
+        <option value="ease-in-out">Ease In-Out</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Scale Settings</div>
+      <div class="range-group">
+        <span class="range-label">Steps:</span>
+        <input type="range" id="stepsRange" min="3" max="20" value="9">
+        <span class="range-value" id="stepsValue">9</span>
+      </div>
+      <div class="range-group">
+        <span class="range-label">Lightness:</span>
+        <input type="range" id="lightnessRange" min="0" max="100" value="100">
+        <span class="range-value" id="lightnessValue">100%</span>
+      </div>
+      <div class="range-group">
+        <span class="range-label">Chroma:</span>
+        <input type="range" id="chromaRange" min="0" max="100" value="100">
+        <span class="range-value" id="chromaValue">100%</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Color Scale Preview</div>
+      <div class="color-scale" id="colorScale"></div>
+    </div>
+
+    <button class="button button-secondary" id="generateBtn">Generate Scale</button>
+    <button class="button button-primary" id="addToFigmaBtn">Add to Figma Variables</button>
+    
+    <div id="message" style="display: none;"></div>
+  </div>
+
+  <script>
+    // Color utilities
+    function isValidHex(color) {
+      return /^#[0-9A-F]{6}$/i.test(color);
+    }
+
+    function hexToRgb(hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    }
+
+    function rgbToHex(r, g, b) {
+      return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+
+    // UI Elements
+    const colorInput = document.getElementById('colorInput');
+    const colorPreview = document.getElementById('colorPreview');
+    const colorError = document.getElementById('colorError');
+    const interpolationMethod = document.getElementById('interpolationMethod');
+    const stepsRange = document.getElementById('stepsRange');
+    const stepsValue = document.getElementById('stepsValue');
+    const lightnessRange = document.getElementById('lightnessRange');
+    const lightnessValue = document.getElementById('lightnessValue');
+    const chromaRange = document.getElementById('chromaRange');
+    const chromaValue = document.getElementById('chromaValue');
+    const colorScale = document.getElementById('colorScale');
+    const generateBtn = document.getElementById('generateBtn');
+    const addToFigmaBtn = document.getElementById('addToFigmaBtn');
+    const message = document.getElementById('message');
+
+    // Event Listeners
+    colorInput.addEventListener('input', updateColorPreview);
+    colorInput.addEventListener('blur', validateColor);
+    stepsRange.addEventListener('input', updateStepsValue);
+    lightnessRange.addEventListener('input', updateLightnessValue);
+    chromaRange.addEventListener('input', updateChromaValue);
+    generateBtn.addEventListener('click', generateColorScale);
+    addToFigmaBtn.addEventListener('click', addToFigma);
+
+    // Initialize
+    updateColorPreview();
+    updateStepsValue();
+    updateLightnessValue();
+    updateChromaValue();
+
+    function updateColorPreview() {
+      const color = colorInput.value;
+      if (isValidHex(color)) {
+        colorPreview.style.backgroundColor = color;
+        colorError.style.display = 'none';
+      } else {
+        colorPreview.style.backgroundColor = '#f0f0f0';
+      }
+    }
+
+    function validateColor() {
+      const color = colorInput.value;
+      if (color && !isValidHex(color)) {
+        colorError.textContent = 'Please enter a valid hex color (e.g., #FF6B6B)';
+        colorError.style.display = 'block';
+        return false;
+      } else {
+        colorError.style.display = 'none';
+        return true;
+      }
+    }
+
+    function updateStepsValue() {
+      stepsValue.textContent = stepsRange.value;
+    }
+
+    function updateLightnessValue() {
+      lightnessValue.textContent = lightnessRange.value + '%';
+    }
+
+    function updateChromaValue() {
+      chromaValue.textContent = chromaRange.value + '%';
+    }
+
+    function showMessage(text, type = 'success') {
+      message.textContent = text;
+      message.className = type;
+      message.style.display = 'block';
+      setTimeout(() => {
+        message.style.display = 'none';
+      }, 3000);
+    }
+
+    function generateColorScale() {
+      if (!validateColor()) return;
+
+      const baseColor = colorInput.value;
+      const steps = parseInt(stepsRange.value);
+      const lightness = parseInt(lightnessRange.value) / 100;
+      const chroma = parseInt(chromaRange.value) / 100;
+      const method = interpolationMethod.value;
+
+      // Send to plugin
+      parent.postMessage({
+        pluginMessage: {
+          type: 'generate-scale',
+          baseColor,
+          steps,
+          lightness,
+          chroma,
+          method
+        }
+      }, '*');
+
+      generateBtn.classList.add('loading');
+    }
+
+    function addToFigma() {
+      if (!validateColor()) return;
+
+      const baseColor = colorInput.value;
+      const steps = parseInt(stepsRange.value);
+      const lightness = parseInt(lightnessRange.value) / 100;
+      const chroma = parseInt(chromaRange.value) / 100;
+      const method = interpolationMethod.value;
+
+      parent.postMessage({
+        pluginMessage: {
+          type: 'add-to-figma',
+          baseColor,
+          steps,
+          lightness,
+          chroma,
+          method
+        }
+      }, '*');
+
+      addToFigmaBtn.classList.add('loading');
+    }
+
+    // Listen for messages from plugin
+    window.addEventListener('message', (event) => {
+      const { type, colors, error } = event.data.pluginMessage;
+
+      if (type === 'scale-generated') {
+        displayColorScale(colors);
+        generateBtn.classList.remove('loading');
+      } else if (type === 'added-to-figma') {
+        showMessage('Color scale added to Figma variables!');
+        addToFigmaBtn.classList.remove('loading');
+      } else if (type === 'error') {
+        showMessage(error, 'error');
+        generateBtn.classList.remove('loading');
+        addToFigmaBtn.classList.remove('loading');
+      }
+    });
+
+    function displayColorScale(colors) {
+      colorScale.innerHTML = '';
+      colors.forEach(color => {
+        const swatch = document.createElement('div');
+        swatch.className = 'color-swatch';
+        swatch.style.backgroundColor = color;
+        swatch.title = color;
+        colorScale.appendChild(swatch);
+      });
+    }
+  </script>
+</body>
+</html>
