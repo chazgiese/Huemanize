@@ -3303,11 +3303,21 @@ var plugin = (() => {
       if (!colorsCollection) {
         colorsCollection = figma.variables.createVariableCollection("Colors");
       }
-      const baseName = `${groupName}/Color Scale ${baseColor.toUpperCase()}`;
+      let increment;
+      if (colors.length <= 5) {
+        increment = 100;
+      } else if (colors.length <= 9) {
+        increment = 50;
+      } else {
+        increment = 25;
+      }
+      const totalRange = (colors.length - 1) * increment;
+      const startNumber = 500 - Math.floor(totalRange / 2);
       for (let i = 0; i < colors.length; i++) {
         const color = colors[i];
         if (!color) continue;
-        const variableName = `${baseName} ${i + 1}`;
+        const colorNumber = startNumber + i * increment;
+        const variableName = `${groupName}/${colorNumber}`;
         const existingVariables = figma.variables.getLocalVariables();
         const existingVariable = existingVariables.find(
           (variable) => variable.name === variableName && variable.variableCollectionId === colorsCollection.id
@@ -3327,7 +3337,7 @@ var plugin = (() => {
           });
         }
       }
-      figma.notify(`Created ${colors.length} color variables in "${groupName}" group within Colors collection`);
+      figma.notify(`Created ${colors.length} color variables in "${groupName}" group (${increment} increments) within Colors collection`);
     } catch (error) {
       console.error("Error creating color variables:", error);
       throw new Error("Failed to create color variables in Figma");

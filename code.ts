@@ -201,16 +201,28 @@ async function createColorVariables(colors: string[], baseColor: string, groupNa
       colorsCollection = figma.variables.createVariableCollection("Colors");
     }
 
-    // Generate variable names with group structure using forward slashes
-    // This creates a variable group within the collection
-    const baseName = `${groupName}/Color Scale ${baseColor.toUpperCase()}`;
+    // Generate Tailwind-style color names
+    // Determine the increment based on the number of steps
+    let increment: number;
+    if (colors.length <= 5) {
+      increment = 100; // Large changes for small scales
+    } else if (colors.length <= 9) {
+      increment = 50;  // Medium changes for medium scales
+    } else {
+      increment = 25;  // Small changes for large scales
+    }
+    
+    // Calculate the starting number to center the scale around 500
+    const totalRange = (colors.length - 1) * increment;
+    const startNumber = 500 - Math.floor(totalRange / 2);
     
     // Create variables for each color in the scale
     for (let i = 0; i < colors.length; i++) {
       const color = colors[i];
       if (!color) continue;
       
-      const variableName = `${baseName} ${i + 1}`;
+      const colorNumber = startNumber + (i * increment);
+      const variableName = `${groupName}/${colorNumber}`;
       
       // Check if variable already exists
       const existingVariables = figma.variables.getLocalVariables();
@@ -236,7 +248,7 @@ async function createColorVariables(colors: string[], baseColor: string, groupNa
       }
     }
 
-    figma.notify(`Created ${colors.length} color variables in "${groupName}" group within Colors collection`);
+    figma.notify(`Created ${colors.length} color variables in "${groupName}" group (${increment} increments) within Colors collection`);
   } catch (error) {
     console.error('Error creating color variables:', error);
     throw new Error('Failed to create color variables in Figma');
