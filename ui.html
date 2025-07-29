@@ -60,19 +60,26 @@
       align-items: center;
       height: 32px;
       padding: 4px 0;
-      flex: 1;
+      flex: 1 0 0;
+      align-self: stretch;
+      column-gap: 8px;
     }
 
     .input-container {
       position: relative;
       display: flex;
-      flex: 1;
+      flex: 1 0 0;
+    }
+
+    .input-container:hover input {
+      border-color: var(--figma-color-border);
     }
 
     input, select {
       background: var(--figma-color-bg-secondary);
       color: var(--figma-color-text);
-      flex: 1;
+      flex: 1 0 0;
+      width: 0;
       padding: 0 8px;
       border-radius: 5px;
       border: 1px solid transparent;
@@ -81,11 +88,10 @@
       letter-spacing: 0.05px;
       height: 24px;
       outline: none;
-      flex: 1;
       -webkit-appearance: none;
       -moz-appearance: none;
       appearance: none;
-      cursor: pointer;
+      cursor: default;
     }
 
     input:hover, select:hover {
@@ -94,7 +100,7 @@
 
     input:focus, select:focus {
       outline: none;
-      border-color: var(--figma-color-border-selected);
+      border-color: var(--figma-color-border-selected) !important;
       box-shadow: none;
     }
 
@@ -249,8 +255,10 @@
   </style>
 </head>
 <body>
- <div class="main-layout">
+  <div class="main-layout">
+    
     <div class="controls-panel">
+      
       <div class="section">
         <div class="section-title">Base Color</div>
         <div class="input-group">
@@ -268,7 +276,7 @@
         <div class="section-title">Interpolation Method</div>
         <div class="input-group">
           <div class="input-container">
-            <select id="interpolationMethod">
+            <select id="interpolationMethod" class="input-with-icon">
               <option value="linear">Linear</option>
               <option value="bezier">Bezier</option>
               <option value="catmull-rom">Catmull-Rom</option>
@@ -276,6 +284,13 @@
               <option value="ease-out">Ease Out</option>
               <option value="ease-in-out">Ease In-Out</option>
             </select>
+            <div class="input-icon-container">
+              <div class="input-icon" id="stepsIcon" data-type="steps" data-min="3" data-max="20">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11.375 2.1875C11.375 2.30353 11.3289 2.41481 11.2469 2.49686C11.1648 2.57891 11.0535 2.625 10.9375 2.625H9.3357C9.02824 2.62492 8.7305 2.73278 8.49443 2.92977C8.25836 3.12676 8.09894 3.40038 8.04398 3.70289L7.52445 6.5625H10.0625C10.1785 6.5625 10.2898 6.60859 10.3719 6.69064C10.4539 6.77269 10.5 6.88397 10.5 7C10.5 7.11603 10.4539 7.22731 10.3719 7.30936C10.2898 7.39141 10.1785 7.4375 10.0625 7.4375H7.36531L6.81844 10.4541C6.72669 10.9584 6.46075 11.4144 6.06705 11.7427C5.67335 12.0709 5.17688 12.2505 4.6643 12.25H3.0625C2.94647 12.25 2.83519 12.2039 2.75314 12.1219C2.67109 12.0398 2.625 11.9285 2.625 11.8125C2.625 11.6965 2.67109 11.5852 2.75314 11.5031C2.83519 11.4211 2.94647 11.375 3.0625 11.375H4.6643C4.97176 11.3751 5.2695 11.2672 5.50557 11.0702C5.74164 10.8732 5.90106 10.5996 5.95602 10.2971L6.47555 7.4375H3.9375C3.82147 7.4375 3.71019 7.39141 3.62814 7.30936C3.54609 7.22731 3.5 7.11603 3.5 7C3.5 6.88397 3.54609 6.77269 3.62814 6.69064C3.71019 6.60859 3.82147 6.5625 3.9375 6.5625H6.63469L7.18156 3.54594C7.27331 3.04163 7.53925 2.58557 7.93295 2.25733C8.32665 1.9291 8.82312 1.74954 9.3357 1.75H10.9375C11.0535 1.75 11.1648 1.79609 11.2469 1.87814C11.3289 1.96019 11.375 2.07147 11.375 2.1875Z" fill="inherit"/>
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -293,8 +308,6 @@
               </div>
             </div>
           </div>
-        </div>
-        <div class="input-group">
           <div class="input-container">
             <input type="text" class="input-with-icon" id="lightnessInput" value="100%" placeholder="100%">
             <div class="input-icon-container">
@@ -305,8 +318,6 @@
               </div>
             </div>
           </div>
-        </div>
-        <div class="input-group">
           <div class="input-container">
             <input type="text" class="input-with-icon" id="chromaInput" value="100%" placeholder="100%">
             <div class="input-icon-container">
@@ -321,8 +332,13 @@
         </div>
       </div>
 
-      <button class="button button-secondary" id="generateBtn">Regenerate Scale</button>
-      <button class="button button-primary" id="addToFigmaBtn">Add to Figma Variables</button>
+      <div class="section">
+        <div class="section-title">Export</div>
+        <button class="button button-secondary" id="generateBtn">Regenerate Scale</button>
+        <button class="button button-primary" id="addToFigmaBtn">Add to Figma Variables</button>
+      </div>
+
+
       
       <div id="message" style="display: none;"></div>
     </div>
