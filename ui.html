@@ -8,70 +8,71 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      -webkit-font-smoothing: antialiased; /* Makes Inter look lighter to match Figma's UI*/
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: geometricPrecision; 
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f5f5f5;
-      color: #333;
-      padding: 16px;
-      width: 480px;
-    }
-
-    .container {
-      background: white;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    h1 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: #1a1a1a;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--figma-color-bg);
+      color: var(--figma-color-text);
+      width: 100%;
+      max-width: 100%;
     }
 
     .main-layout {
       display: flex;
-      gap: 20px;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: flex-start;
     }
 
     .controls-panel {
       flex: 1;
       min-width: 0;
+      border-right: 1px solid var(--figma-color-border);
     }
 
     .preview-panel {
       width: 120px;
-      flex-shrink: 0;
+      flex: 1;
     }
 
     .section {
-      margin-bottom: 20px;
+      padding: 0 20px;
+      margin-bottom: 12px;
     }
 
     .section-title {
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 8px;
-      color: #666;
+      display: flex;
+      justify-content: flex-start;
+      height: 40px;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 450;
+      letter-spacing: 0.05px;
+      color: var(--figma-color-text);
     }
 
     .input-group {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
+      height: 32px;
+      padding: 0 4px;
     }
 
     input[type="text"] {
+      background: var(--figma-color-bg-secondary);
+      color: var(--figma-color-text);
       flex: 1;
       padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
+      border-radius: 5px;
+      border: none;
+      font-size: 11px;
+      height: 24px;
       font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      outline: none;
     }
 
     input[type="text"]:focus {
@@ -126,6 +127,7 @@
       background: #ddd;
       outline: none;
       -webkit-appearance: none;
+      appearance: none;
     }
 
     input[type="range"]::-webkit-slider-thumb {
@@ -135,6 +137,10 @@
       border-radius: 50%;
       background: #18a0fb;
       cursor: pointer;
+    }
+
+    #colorInput {
+      padding-left: 24px;
     }
 
     .range-value {
@@ -249,63 +255,61 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🎨 Huemanize</h1>
-    
-    <div class="main-layout">
-      <div class="controls-panel">
-        <div class="section">
-          <div class="section-title">Base Color</div>
-          <div class="input-group">
+ <div class="main-layout">
+    <div class="controls-panel">
+      <div class="section">
+        <div class="section-title">Base Color</div>
+        <div class="input-group">
+          <div class="swatch-input">
             <input type="text" id="colorInput" placeholder="#FF6B6B" maxlength="7">
             <div class="color-preview" id="colorPreview"></div>
           </div>
-          <div id="colorError" class="error" style="display: none;"></div>
         </div>
-
-        <div class="section">
-          <div class="section-title">Interpolation Method</div>
-          <select id="interpolationMethod">
-            <option value="linear">Linear</option>
-            <option value="bezier">Bezier</option>
-            <option value="catmull-rom">Catmull-Rom</option>
-            <option value="ease-in">Ease In</option>
-            <option value="ease-out">Ease Out</option>
-            <option value="ease-in-out">Ease In-Out</option>
-          </select>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Scale Settings</div>
-          <div class="range-group">
-            <span class="range-label">Steps:</span>
-            <input type="range" id="stepsRange" min="3" max="20" value="9">
-            <span class="range-value" id="stepsValue">9</span>
-          </div>
-          <div class="range-group">
-            <span class="range-label">Lightness:</span>
-            <input type="range" id="lightnessRange" min="0" max="100" value="100">
-            <span class="range-value" id="lightnessValue">100%</span>
-          </div>
-          <div class="range-group">
-            <span class="range-label">Chroma:</span>
-            <input type="range" id="chromaRange" min="0" max="100" value="100">
-            <span class="range-value" id="chromaValue">100%</span>
-          </div>
-        </div>
-
-        <button class="button button-secondary" id="generateBtn">Regenerate Scale</button>
-        <button class="button button-primary" id="addToFigmaBtn">Add to Figma Variables</button>
-        
-        <div id="message" style="display: none;"></div>
+        <div id="colorError" class="error" style="display: none;"></div>
       </div>
 
-      <div class="preview-panel">
-        <div class="section-title">Scale Preview</div>
-        <div class="color-scale" id="colorScale">
-          <div class="preview-placeholder">
-            Generate a scale<br>to see preview
-          </div>
+      <div class="section">
+        <div class="section-title">Interpolation Method</div>
+        <select id="interpolationMethod">
+          <option value="linear">Linear</option>
+          <option value="bezier">Bezier</option>
+          <option value="catmull-rom">Catmull-Rom</option>
+          <option value="ease-in">Ease In</option>
+          <option value="ease-out">Ease Out</option>
+          <option value="ease-in-out">Ease In-Out</option>
+        </select>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Scale Settings</div>
+        <div class="range-group">
+          <span class="range-label">Steps:</span>
+          <input type="range" id="stepsRange" min="3" max="20" value="9">
+          <span class="range-value" id="stepsValue">9</span>
+        </div>
+        <div class="range-group">
+          <span class="range-label">Lightness:</span>
+          <input type="range" id="lightnessRange" min="0" max="100" value="100">
+          <span class="range-value" id="lightnessValue">100%</span>
+        </div>
+        <div class="range-group">
+          <span class="range-label">Chroma:</span>
+          <input type="range" id="chromaRange" min="0" max="100" value="100">
+          <span class="range-value" id="chromaValue">100%</span>
+        </div>
+      </div>
+
+      <button class="button button-secondary" id="generateBtn">Regenerate Scale</button>
+      <button class="button button-primary" id="addToFigmaBtn">Add to Figma Variables</button>
+      
+      <div id="message" style="display: none;"></div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="section-title">Scale Preview</div>
+      <div class="color-scale" id="colorScale">
+        <div class="preview-placeholder">
+          Generate a scale<br>to see preview
         </div>
       </div>
     </div>

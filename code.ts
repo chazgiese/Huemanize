@@ -290,8 +290,8 @@ figma.ui.onmessage = async (msg: PluginMessage) => {
 
 // Show the UI first
 figma.showUI(__html__, { 
-  width: 640, 
-  height: 400,
+  width: 480, 
+  height: 416,
   themeColors: true
 });
 
