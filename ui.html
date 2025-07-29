@@ -285,7 +285,7 @@
               <option value="ease-in-out">Ease In-Out</option>
             </select>
             <div class="input-icon-container">
-              <div class="input-icon" id="stepsIcon" data-type="steps" data-min="3" data-max="20">
+              <div class="input-icon">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M11.375 2.1875C11.375 2.30353 11.3289 2.41481 11.2469 2.49686C11.1648 2.57891 11.0535 2.625 10.9375 2.625H9.3357C9.02824 2.62492 8.7305 2.73278 8.49443 2.92977C8.25836 3.12676 8.09894 3.40038 8.04398 3.70289L7.52445 6.5625H10.0625C10.1785 6.5625 10.2898 6.60859 10.3719 6.69064C10.4539 6.77269 10.5 6.88397 10.5 7C10.5 7.11603 10.4539 7.22731 10.3719 7.30936C10.2898 7.39141 10.1785 7.4375 10.0625 7.4375H7.36531L6.81844 10.4541C6.72669 10.9584 6.46075 11.4144 6.06705 11.7427C5.67335 12.0709 5.17688 12.2505 4.6643 12.25H3.0625C2.94647 12.25 2.83519 12.2039 2.75314 12.1219C2.67109 12.0398 2.625 11.9285 2.625 11.8125C2.625 11.6965 2.67109 11.5852 2.75314 11.5031C2.83519 11.4211 2.94647 11.375 3.0625 11.375H4.6643C4.97176 11.3751 5.2695 11.2672 5.50557 11.0702C5.74164 10.8732 5.90106 10.5996 5.95602 10.2971L6.47555 7.4375H3.9375C3.82147 7.4375 3.71019 7.39141 3.62814 7.30936C3.54609 7.22731 3.5 7.11603 3.5 7C3.5 6.88397 3.54609 6.77269 3.62814 6.69064C3.71019 6.60859 3.82147 6.5625 3.9375 6.5625H6.63469L7.18156 3.54594C7.27331 3.04163 7.53925 2.58557 7.93295 2.25733C8.32665 1.9291 8.82312 1.74954 9.3357 1.75H10.9375C11.0535 1.75 11.1648 1.79609 11.2469 1.87814C11.3289 1.96019 11.375 2.07147 11.375 2.1875Z" fill="inherit"/>
                 </svg>
@@ -334,7 +334,21 @@
 
       <div class="section">
         <div class="section-title">Export</div>
-        <button class="button button-secondary" id="generateBtn">Regenerate Scale</button>
+        <div class="input-group">
+          <div class="input-container">
+            <input type="text" class="input-with-icon" id="groupNameInput" placeholder="e.g., Primary, Secondary, Accent" maxlength="50">
+            <div class="input-icon-container">
+              <div class="input-icon">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12.6279 9.40624C12.6857 9.50651 12.7014 9.6256 12.6715 9.73742C12.6417 9.84925 12.5688 9.9447 12.4688 10.0029L7.21875 13.0654C7.15185 13.1044 7.0758 13.1249 6.99836 13.1249C6.92092 13.1249 6.84487 13.1044 6.77797 13.0654L1.52797 10.0029C1.42936 9.94362 1.35806 9.84792 1.32951 9.73648C1.30095 9.62504 1.31744 9.50684 1.37539 9.40747C1.43335 9.30809 1.52811 9.23555 1.63916 9.20553C1.75022 9.17552 1.86863 9.19045 1.96875 9.2471L7 12.1811L12.0312 9.2471C12.1315 9.18931 12.2506 9.17362 12.3624 9.20344C12.4743 9.23327 12.5697 9.30619 12.6279 9.40624ZM12.0312 6.6221L7 9.55608L1.96875 6.6221C1.86913 6.5725 1.75436 6.56272 1.64779 6.59476C1.54122 6.6268 1.45087 6.69825 1.39512 6.79456C1.33937 6.89086 1.32241 7.0048 1.3477 7.11317C1.37299 7.22154 1.43863 7.3162 1.53125 7.37788L6.78125 10.4404C6.84815 10.4794 6.9242 10.4999 7.00164 10.4999C7.07908 10.4999 7.15513 10.4794 7.22203 10.4404L12.472 7.37788C12.5225 7.34935 12.5667 7.31109 12.6022 7.26532C12.6378 7.21955 12.6638 7.16718 12.6789 7.11125C12.6941 7.05532 12.6979 6.99694 12.6903 6.93951C12.6827 6.88208 12.6637 6.82673 12.6345 6.77669C12.6053 6.72664 12.5665 6.68289 12.5203 6.64797C12.474 6.61306 12.4213 6.58767 12.3652 6.57329C12.3091 6.55891 12.2507 6.55582 12.1933 6.5642C12.136 6.57257 12.0809 6.59225 12.0312 6.6221ZM1.3125 4.37499C1.31267 4.29836 1.33297 4.22312 1.37136 4.1568C1.40975 4.09048 1.46489 4.03541 1.53125 3.9971L6.78125 0.934596C6.84815 0.895586 6.9242 0.875031 7.00164 0.875031C7.07908 0.875031 7.15513 0.895586 7.22203 0.934596L12.472 3.9971C12.5381 4.03563 12.5929 4.09079 12.6309 4.1571C12.669 4.2234 12.6891 4.29853 12.6891 4.37499C12.6891 4.45145 12.669 4.52657 12.6309 4.59288C12.5929 4.65918 12.5381 4.71435 12.472 4.75288L7.22203 7.81538C7.15513 7.85439 7.07908 7.87494 7.00164 7.87494C6.9242 7.87494 6.84815 7.85439 6.78125 7.81538L1.53125 4.75288C1.46489 4.71456 1.40975 4.65949 1.37136 4.59317C1.33297 4.52685 1.31267 4.45162 1.3125 4.37499ZM2.61844 4.37499L7 6.93108L11.3816 4.37499L7 1.81889L2.61844 4.37499Z" fill="inherit"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom: 12px; font-size: 11px; color: var(--figma-color-text-secondary);">
+          Variable group name (within Colors collection)
+        </div>
         <button class="button button-primary" id="addToFigmaBtn">Add to Figma Variables</button>
       </div>
 
@@ -383,8 +397,8 @@
     const lightnessIcon = document.getElementById('lightnessIcon');
     const chromaInput = document.getElementById('chromaInput');
     const chromaIcon = document.getElementById('chromaIcon');
+    const groupNameInput = document.getElementById('groupNameInput');
     const colorScale = document.getElementById('colorScale');
-    const generateBtn = document.getElementById('generateBtn');
     const addToFigmaBtn = document.getElementById('addToFigmaBtn');
     const message = document.getElementById('message');
 
@@ -405,8 +419,8 @@
     lightnessInput.addEventListener('focus', selectAllText);
     chromaInput.addEventListener('input', () => debounce(autoGenerateScale, 100));
     chromaInput.addEventListener('focus', selectAllText);
+    groupNameInput.addEventListener('focus', selectAllText);
     interpolationMethod.addEventListener('change', () => debounce(autoGenerateScale, 100));
-    generateBtn.addEventListener('click', generateColorScale);
     addToFigmaBtn.addEventListener('click', addToFigma);
 
     // Drag functionality for scale settings
@@ -537,11 +551,7 @@
       }, 3000);
     }
 
-    function generateColorScale() {
-      // This function is now just a wrapper for autoGenerateScale
-      // Kept for the button click event
-      autoGenerateScale();
-    }
+
 
     function addToFigma() {
       if (!validateColor()) return;
@@ -551,6 +561,7 @@
       const lightness = parseInt(lightnessInput.value.replace('%', '')) / 100;
       const chroma = parseInt(chromaInput.value.replace('%', '')) / 100;
       const method = interpolationMethod.value;
+      const groupName = groupNameInput.value.trim() || 'My Color Scale';
 
       parent.postMessage({
         pluginMessage: {
@@ -559,7 +570,8 @@
           steps,
           lightness,
           chroma,
-          method
+          method,
+          groupName
         }
       }, '*');
 

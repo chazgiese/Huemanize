@@ -3295,7 +3295,7 @@ var plugin = (() => {
       throw error;
     }
   }
-  async function createColorVariables(colors, baseColor) {
+  async function createColorVariables(colors, baseColor, groupName) {
     try {
       let colorsCollection;
       const existingCollections = figma.variables.getLocalVariableCollections();
@@ -3303,7 +3303,7 @@ var plugin = (() => {
       if (!colorsCollection) {
         colorsCollection = figma.variables.createVariableCollection("Colors");
       }
-      const baseName = `Color Scale ${baseColor.toUpperCase()}`;
+      const baseName = `${groupName}/Color Scale ${baseColor.toUpperCase()}`;
       for (let i = 0; i < colors.length; i++) {
         const color = colors[i];
         if (!color) continue;
@@ -3327,7 +3327,7 @@ var plugin = (() => {
           });
         }
       }
-      figma.notify(`Created ${colors.length} color variables in "Colors" collection`);
+      figma.notify(`Created ${colors.length} color variables in "${groupName}" group within Colors collection`);
     } catch (error) {
       console.error("Error creating color variables:", error);
       throw new Error("Failed to create color variables in Figma");
@@ -3356,7 +3356,8 @@ var plugin = (() => {
           msg.chroma,
           msg.method
         );
-        await createColorVariables(colors, msg.baseColor);
+        const groupName = msg.groupName || "My Color Scale";
+        await createColorVariables(colors, msg.baseColor, groupName);
         const response = {
           type: "added-to-figma"
         };

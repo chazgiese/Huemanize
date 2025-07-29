@@ -18,6 +18,7 @@ interface PluginMessage {
   lightness: number;
   chroma: number;
   method: string;
+  groupName?: string;
 }
 
 interface PluginResponse {
@@ -186,7 +187,7 @@ function generateColorScale(baseColor: string, steps: number, lightness: number,
 }
 
 // Figma variable management
-async function createColorVariables(colors: string[], baseColor: string): Promise<void> {
+async function createColorVariables(colors: string[], baseColor: string, groupName: string): Promise<void> {
   try {
     // Find or create the "Colors" collection
     let colorsCollection: VariableCollection | undefined;
@@ -196,12 +197,13 @@ async function createColorVariables(colors: string[], baseColor: string): Promis
     colorsCollection = existingCollections.find((collection: VariableCollection) => collection.name === "Colors");
 
     if (!colorsCollection) {
-      // Create a new collection if it doesn't exist
+      // Create a new "Colors" collection if it doesn't exist
       colorsCollection = figma.variables.createVariableCollection("Colors");
     }
 
-    // Generate a base name from the input color
-    const baseName = `Color Scale ${baseColor.toUpperCase()}`;
+    // Generate variable names with group structure using forward slashes
+    // This creates a variable group within the collection
+    const baseName = `${groupName}/Color Scale ${baseColor.toUpperCase()}`;
     
     // Create variables for each color in the scale
     for (let i = 0; i < colors.length; i++) {
@@ -234,7 +236,7 @@ async function createColorVariables(colors: string[], baseColor: string): Promis
       }
     }
 
-    figma.notify(`Created ${colors.length} color variables in "Colors" collection`);
+    figma.notify(`Created ${colors.length} color variables in "${groupName}" group within Colors collection`);
   } catch (error) {
     console.error('Error creating color variables:', error);
     throw new Error('Failed to create color variables in Figma');
@@ -268,7 +270,8 @@ figma.ui.onmessage = async (msg: PluginMessage) => {
         msg.method
       );
 
-      await createColorVariables(colors, msg.baseColor);
+      const groupName = msg.groupName || 'My Color Scale';
+      await createColorVariables(colors, msg.baseColor, groupName);
 
       const response: PluginResponse = {
         type: 'added-to-figma'
