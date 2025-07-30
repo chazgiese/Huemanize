@@ -3183,7 +3183,7 @@ var plugin = (() => {
   // code.ts
   function generateRandomColor() {
     const l = 0.3 + Math.random() * 0.4;
-    const c4 = 0.1 + Math.random() * 0.2;
+    const c4 = 0.15 + Math.random() * 0.25;
     const h = Math.random() * 360;
     const color = {
       mode: "oklch",
@@ -3230,26 +3230,78 @@ var plugin = (() => {
       const baseChroma = parsedColor.c || 0.1;
       const chromaReduction = mode === "dark" ? 0.9 : 1;
       const adjustedBaseChroma = baseChroma * chromaReduction;
-      const maxChroma = Math.min(0.4, adjustedBaseChroma * 2);
+      const maxChroma = Math.min(0.5, adjustedBaseChroma * 2.5);
       let minLightness, maxLightness;
+      const isCatmullRom = method === "catmull-rom";
       if (mode === "light") {
-        minLightness = 0.95;
-        maxLightness = 0.15;
+        if (isCatmullRom) {
+          minLightness = 0.995;
+          maxLightness = 0.03;
+        } else {
+          minLightness = 0.98;
+          maxLightness = 0.12;
+        }
       } else {
-        minLightness = 0.07;
-        maxLightness = 0.85;
+        if (isCatmullRom) {
+          minLightness = 0.02;
+          maxLightness = 0.98;
+        } else {
+          minLightness = 0.08;
+          maxLightness = 0.95;
+        }
       }
       for (let i = 0; i < steps; i++) {
         const t = i / (steps - 1);
         const easedT = easing(t);
-        const interpolatedLightness = minLightness + (maxLightness - minLightness) * easedT;
+        let interpolatedLightness;
+        if (method === "catmull-rom") {
+          const clampedT = Math.max(0, Math.min(1, easedT));
+          interpolatedLightness = minLightness + (maxLightness - minLightness) * clampedT;
+        } else {
+          interpolatedLightness = minLightness + (maxLightness - minLightness) * easedT;
+        }
         const finalLightness = minLightness + (interpolatedLightness - minLightness) * lightness;
-        const chromaCurve = Math.sin(easedT * Math.PI);
+        let chromaCurve;
+        let minChroma;
+        switch (method) {
+          case "linear":
+            chromaCurve = 0.3 + 0.7 * Math.sin(easedT * Math.PI);
+            minChroma = 0.05;
+            break;
+          case "bezier":
+            chromaCurve = 0.4 + 0.6 * Math.sin(easedT * Math.PI);
+            minChroma = 0.08;
+            break;
+          case "catmull-rom":
+            const clampedT = Math.max(0, Math.min(1, easedT));
+            const smoothedT = Math.sin(clampedT * Math.PI * 0.5);
+            chromaCurve = 0.5 + 0.5 * smoothedT;
+            minChroma = 0.1;
+            break;
+          case "ease-in":
+            chromaCurve = 0.6 + 0.4 * (1 - Math.pow(1 - easedT, 2));
+            minChroma = 0.08;
+            break;
+          case "ease-out":
+            chromaCurve = 0.6 + 0.4 * Math.pow(easedT, 2);
+            minChroma = 0.08;
+            break;
+          case "ease-in-out":
+            chromaCurve = 0.35 + 0.65 * Math.sin(easedT * Math.PI);
+            minChroma = 0.06;
+            break;
+          default:
+            chromaCurve = 0.3 + 0.7 * Math.sin(easedT * Math.PI);
+            minChroma = 0.05;
+        }
         const interpolatedChroma = adjustedBaseChroma * chromaCurve * chroma;
-        const finalChroma = Math.min(maxChroma, Math.max(0, interpolatedChroma));
+        const finalChroma = Math.min(maxChroma, Math.max(minChroma, interpolatedChroma));
+        const minBound = isCatmullRom ? 0.01 : 0.03;
+        const maxBound = isCatmullRom ? 0.999 : 0.99;
+        const clampedLightness = Math.max(minBound, Math.min(maxBound, finalLightness));
         const color = {
           mode: "oklch",
-          l: finalLightness,
+          l: clampedLightness,
           c: finalChroma,
           h: baseHue
         };

@@ -37,7 +37,7 @@ const DEFAULT_STEPS = 11; // 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 95
 function generateRandomColor(): string {
   // Generate random values for OKLCH
   const l = 0.3 + Math.random() * 0.4; // Lightness between 0.3 and 0.7 for good visibility
-  const c = 0.1 + Math.random() * 0.2; // Chroma between 0.1 and 0.3 for moderate saturation
+  const c = 0.15 + Math.random() * 0.25; // Chroma between 0.15 and 0.4 for better saturation
   const h = Math.random() * 360; // Hue between 0 and 360
   
   const color: Color = {
@@ -104,20 +104,34 @@ function generateColorScale(baseColor: string, steps: number, lightness: number,
     // Dark mode adjustments
     const chromaReduction = mode === 'dark' ? 0.9 : 1.0; // Reduce chroma by 10% in dark mode
     const adjustedBaseChroma = baseChroma * chromaReduction;
-    const maxChroma = Math.min(0.4, adjustedBaseChroma * 2);
+    const maxChroma = Math.min(0.5, adjustedBaseChroma * 2.5); // Allow higher max chroma for better saturation
     
-    // Define lightness ranges based on mode
+    // Define lightness ranges based on mode and method
     let minLightness: number, maxLightness: number;
+    
+    // Catmull-Rom gets extra affordance for more extreme values
+    const isCatmullRom = method === 'catmull-rom';
+    
     if (mode === 'light') {
-      // Light mode: from very light to medium dark
-      // Avoid pure white/black extremes
-      minLightness = 0.95; // Very light (near white, but not pure)
-      maxLightness = 0.15; // Very dark (near black, but not pure)
+      if (isCatmullRom) {
+        // Catmull-Rom: maximum affordance for light mode
+        minLightness = 0.995; // Nearly pure white, sacrificing some hue
+        maxLightness = 0.03; // Nearly pure black but still tinted
+      } else {
+        // Other methods: standard light mode range
+        minLightness = 0.98; // Very light, sacrificing some hue
+        maxLightness = 0.12; // Very dark but not pure black
+      }
     } else {
-      // Dark mode: from very dark to medium light
-      // Use compressed range to avoid overly bright colors
-      minLightness = 0.07; // Very dark (near black, but not pure)
-      maxLightness = 0.85; // Medium light (avoid pure white)
+      if (isCatmullRom) {
+        // Catmull-Rom: maximum affordance for dark mode
+        minLightness = 0.02; // Nearly pure black but still tinted
+        maxLightness = 0.98; // Nearly pure white, sacrificing some hue
+      } else {
+        // Other methods: standard dark mode range
+        minLightness = 0.08; // Very dark but not pure black
+        maxLightness = 0.95; // Very light, sacrificing some hue
+      }
     }
     
     for (let i = 0; i < steps; i++) {
@@ -125,19 +139,80 @@ function generateColorScale(baseColor: string, steps: number, lightness: number,
       const easedT = easing(t);
       
       // Interpolate lightness (order is handled by min/max values)
-      const interpolatedLightness = minLightness + (maxLightness - minLightness) * easedT;
+      let interpolatedLightness: number;
+      
+      if (method === 'catmull-rom') {
+        // Catmull-Rom needs special handling to prevent overshoot
+        const clampedT = Math.max(0, Math.min(1, easedT));
+        interpolatedLightness = minLightness + (maxLightness - minLightness) * clampedT;
+      } else {
+        interpolatedLightness = minLightness + (maxLightness - minLightness) * easedT;
+      }
       
       // Apply lightness adjustment parameter
       const finalLightness = minLightness + (interpolatedLightness - minLightness) * lightness;
       
-      // Create a bell curve for chroma - higher in the middle, lower at extremes
-      const chromaCurve = Math.sin(easedT * Math.PI);
+      // Method-specific chroma curves for better results
+      let chromaCurve: number;
+      let minChroma: number;
+      
+      switch (method) {
+        case 'linear':
+          // Linear interpolation works well with a simple bell curve
+          chromaCurve = 0.3 + 0.7 * Math.sin(easedT * Math.PI);
+          minChroma = 0.05;
+          break;
+          
+        case 'bezier':
+          // Bezier has smooth transitions, use a gentler curve
+          chromaCurve = 0.4 + 0.6 * Math.sin(easedT * Math.PI);
+          minChroma = 0.08;
+          break;
+          
+        case 'catmull-rom':
+          // Catmull-Rom can have overshoot, especially with more steps
+          // Use a more conservative approach and clamp the eased value
+          const clampedT = Math.max(0, Math.min(1, easedT));
+          const smoothedT = Math.sin(clampedT * Math.PI * 0.5);
+          chromaCurve = 0.5 + 0.5 * smoothedT;
+          minChroma = 0.1;
+          break;
+          
+        case 'ease-in':
+          // Ease-in starts slow, so we need more chroma at the beginning
+          chromaCurve = 0.6 + 0.4 * (1 - Math.pow(1 - easedT, 2));
+          minChroma = 0.08;
+          break;
+          
+        case 'ease-out':
+          // Ease-out ends slow, so we need more chroma at the end
+          chromaCurve = 0.6 + 0.4 * Math.pow(easedT, 2);
+          minChroma = 0.08;
+          break;
+          
+        case 'ease-in-out':
+          // Ease-in-out is smooth, use a balanced curve
+          chromaCurve = 0.35 + 0.65 * Math.sin(easedT * Math.PI);
+          minChroma = 0.06;
+          break;
+          
+        default:
+          // Fallback to linear
+          chromaCurve = 0.3 + 0.7 * Math.sin(easedT * Math.PI);
+          minChroma = 0.05;
+      }
+      
       const interpolatedChroma = adjustedBaseChroma * chromaCurve * chroma;
-      const finalChroma = Math.min(maxChroma, Math.max(0, interpolatedChroma));
+      const finalChroma = Math.min(maxChroma, Math.max(minChroma, interpolatedChroma));
+      
+      // Final safety check for lightness bounds - allow more sacrifice of hue at light end
+      const minBound = isCatmullRom ? 0.01 : 0.03;
+      const maxBound = isCatmullRom ? 0.999 : 0.99; // Allow nearly pure white for all methods
+      const clampedLightness = Math.max(minBound, Math.min(maxBound, finalLightness));
       
       const color: Color = {
         mode: 'oklch',
-        l: finalLightness,
+        l: clampedLightness,
         c: finalChroma,
         h: baseHue
       };
