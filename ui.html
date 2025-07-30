@@ -299,6 +299,16 @@
         <div class="section-title">Scale Settings</div>
         <div class="input-group">
           <div class="input-container">
+            <input type="number" class="input-with-icon" id="stepsInput" value="11" min="2" max="50" placeholder="11">
+            <div class="input-icon-container">
+              <div class="input-icon">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12.25 1.75H1.75C1.334 1.75 1 2.084 1 2.5V11.5C1 11.916 1.334 12.25 1.75 12.25H12.25C12.666 12.25 13 11.916 13 11.5V2.5C13 2.084 12.666 1.75 12.25 1.75ZM12.25 11.5H1.75V2.5H12.25V11.5ZM3.5 4.375C3.5 4.201 3.649 4.052 3.823 4.052H10.177C10.351 4.052 10.5 4.201 10.5 4.375C10.5 4.549 10.351 4.698 10.177 4.698H3.823C3.649 4.698 3.5 4.549 3.5 4.375ZM3.5 6.125C3.5 5.951 3.649 5.802 3.823 5.802H10.177C10.351 5.802 10.5 5.951 10.5 6.125C10.5 6.299 10.351 6.448 10.177 6.448H3.823C3.649 6.448 3.5 6.299 3.5 6.125ZM3.5 7.875C3.5 7.701 3.649 7.552 3.823 7.552H7.875C8.049 7.552 8.198 7.701 8.198 7.875C8.198 8.049 8.049 8.198 7.875 8.198H3.823C3.649 8.198 3.5 8.049 3.5 7.875Z" fill="inherit"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="input-container">
             <input type="text" class="input-with-icon" id="lightnessInput" value="100%" placeholder="100%">
             <div class="input-icon-container">
               <div class="input-icon" id="lightnessIcon" data-type="lightness" data-min="0" data-max="100">
@@ -386,6 +396,7 @@
     const lightnessIcon = document.getElementById('lightnessIcon');
     const chromaInput = document.getElementById('chromaInput');
     const chromaIcon = document.getElementById('chromaIcon');
+    const stepsInput = document.getElementById('stepsInput');
     const groupNameInput = document.getElementById('groupNameInput');
     const colorScale = document.getElementById('colorScale');
     const addToFigmaBtn = document.getElementById('addToFigmaBtn');
@@ -406,6 +417,8 @@
     lightnessInput.addEventListener('focus', selectAllText);
     chromaInput.addEventListener('input', () => debounce(autoGenerateScale, 100));
     chromaInput.addEventListener('focus', selectAllText);
+    stepsInput.addEventListener('input', () => debounce(autoGenerateScale, 100));
+    stepsInput.addEventListener('focus', selectAllText);
     groupNameInput.addEventListener('focus', selectAllText);
     interpolationMethod.addEventListener('change', () => debounce(autoGenerateScale, 100));
     addToFigmaBtn.addEventListener('click', addToFigma);
@@ -512,6 +525,7 @@
       
       const lightness = parseInt(lightnessInput.value.replace('%', '')) / 100;
       const chroma = parseInt(chromaInput.value.replace('%', '')) / 100;
+      const steps = parseInt(stepsInput.value) || 11;
       const method = interpolationMethod.value;
 
       // Send to plugin
@@ -521,6 +535,7 @@
           baseColor,
           lightness,
           chroma,
+          steps,
           method
         }
       }, '*');
@@ -543,6 +558,7 @@
       const baseColor = colorInput.value;
       const lightness = parseInt(lightnessInput.value.replace('%', '')) / 100;
       const chroma = parseInt(chromaInput.value.replace('%', '')) / 100;
+      const steps = parseInt(stepsInput.value) || 11;
       const method = interpolationMethod.value;
       const groupName = groupNameInput.value.trim() || 'My Color Scale';
 
@@ -552,6 +568,7 @@
           baseColor,
           lightness,
           chroma,
+          steps,
           method,
           groupName
         }

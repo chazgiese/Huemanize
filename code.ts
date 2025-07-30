@@ -16,6 +16,7 @@ interface PluginMessage {
   baseColor: string;
   lightness: number;
   chroma: number;
+  steps: number;
   method: string;
   groupName?: string;
 }
@@ -27,8 +28,8 @@ interface PluginResponse {
   defaultColor?: string;
 }
 
-// Fixed number of steps for consistent color scales (similar to Tailwind CSS)
-const FIXED_STEPS = 11; // 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950
+// Default number of steps for consistent color scales (similar to Tailwind CSS)
+const DEFAULT_STEPS = 11; // 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950
 
 // Generate random color in OKLCH space
 function generateRandomColor(): string {
@@ -143,8 +144,85 @@ function generateColorScale(baseColor: string, steps: number, lightness: number,
   }
 }
 
+// Generate color numbers based on the number of steps
+function generateColorNumbers(steps: number): number[] {
+  const standardSteps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+  
+  if (steps === 11) {
+    return standardSteps;
+  } else if (steps < 11) {
+    // For fewer steps, use the same names but skip some steps
+    // For example, 3 steps: [50, 500, 950]
+    // For example, 5 steps: [50, 300, 500, 700, 950]
+    const indices = [];
+    for (let i = 0; i < steps; i++) {
+      const index = Math.round((i / (steps - 1)) * (standardSteps.length - 1));
+      indices.push(index);
+    }
+    return indices.map(i => standardSteps[i]);
+  } else {
+    // For more steps, add intermediate values with 25 increments
+    const numbers: number[] = [];
+    
+    // Calculate step size to distribute evenly across the range
+    const stepSize = 900 / (steps - 1); // 900 is the range from 50 to 950
+    
+    for (let i = 0; i < steps; i++) {
+      let number = Math.round(50 + (stepSize * i));
+      
+      // Round to nearest 25 for intermediate values (but keep 50 and 950 as is)
+      if (number > 50 && number < 950) {
+        number = Math.round(number / 25) * 25;
+      }
+      
+      // Ensure we don't have duplicates and stay within bounds
+      if (number < 50) number = 50;
+      if (number > 950) number = 950;
+      
+      numbers.push(number);
+    }
+    
+    // Remove duplicates and sort
+    const uniqueNumbers = [...new Set(numbers)].sort((a, b) => a - b);
+    
+    // If we have fewer numbers than requested steps due to duplicates,
+    // add more intermediate values
+    if (uniqueNumbers.length < steps) {
+      const additionalSteps = steps - uniqueNumbers.length;
+      const gaps = [];
+      
+      // Find gaps between existing numbers
+      for (let i = 0; i < uniqueNumbers.length - 1; i++) {
+        const gap = uniqueNumbers[i + 1] - uniqueNumbers[i];
+        if (gap > 25) {
+          gaps.push({
+            start: uniqueNumbers[i],
+            end: uniqueNumbers[i + 1],
+            size: gap
+          });
+        }
+      }
+      
+      // Add intermediate values in the largest gaps
+      gaps.sort((a, b) => b.size - a.size);
+      
+      for (let i = 0; i < Math.min(additionalSteps, gaps.length); i++) {
+        const gap = gaps[i];
+        const midPoint = Math.round((gap.start + gap.end) / 2 / 25) * 25;
+        if (midPoint > gap.start && midPoint < gap.end) {
+          uniqueNumbers.push(midPoint);
+        }
+      }
+      
+      return uniqueNumbers.sort((a, b) => a - b);
+    }
+    
+    return uniqueNumbers;
+  }
+}
+
 // Figma variable management
-async function createColorVariables(colors: string[], baseColor: string, groupName: string): Promise<void> {
+async function createColorVariables(colors: string[], baseColor: string, groupName: string, steps: number): Promise<void> {
   try {
     // Find or create the "Colors" collection
     let colorsCollection: VariableCollection | undefined;
@@ -158,8 +236,8 @@ async function createColorVariables(colors: string[], baseColor: string, groupNa
       colorsCollection = figma.variables.createVariableCollection("Colors");
     }
 
-    // Generate Tailwind-style color names with fixed steps
-    const colorNumbers = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+    // Generate color numbers based on the number of steps
+    const colorNumbers = generateColorNumbers(steps);
     
     // Create variables for each color in the scale
     for (let i = 0; i < colors.length; i++) {
@@ -206,7 +284,7 @@ figma.ui.onmessage = async (msg: PluginMessage) => {
     if (msg.type === 'generate-scale') {
       const colors = generateColorScale(
         msg.baseColor,
-        FIXED_STEPS,
+        msg.steps,
         msg.lightness,
         msg.chroma,
         msg.method
@@ -221,14 +299,14 @@ figma.ui.onmessage = async (msg: PluginMessage) => {
     } else if (msg.type === 'add-to-figma') {
       const colors = generateColorScale(
         msg.baseColor,
-        FIXED_STEPS,
+        msg.steps,
         msg.lightness,
         msg.chroma,
         msg.method
       );
 
       const groupName = msg.groupName || 'My Color Scale';
-      await createColorVariables(colors, msg.baseColor, groupName);
+      await createColorVariables(colors, msg.baseColor, groupName, msg.steps);
 
       const response: PluginResponse = {
         type: 'added-to-figma'

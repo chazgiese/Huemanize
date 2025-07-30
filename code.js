@@ -3181,7 +3181,6 @@ var plugin = (() => {
   var yiq = useMode(definition_default27);
 
   // code.ts
-  var FIXED_STEPS = 11;
   function generateRandomColor() {
     const l = 0.3 + Math.random() * 0.4;
     const c4 = 0.1 + Math.random() * 0.2;
@@ -3261,7 +3260,57 @@ var plugin = (() => {
       throw error;
     }
   }
-  async function createColorVariables(colors, baseColor, groupName) {
+  function generateColorNumbers(steps) {
+    const standardSteps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+    if (steps === 11) {
+      return standardSteps;
+    } else if (steps < 11) {
+      const indices = [];
+      for (let i = 0; i < steps; i++) {
+        const index = Math.round(i / (steps - 1) * (standardSteps.length - 1));
+        indices.push(index);
+      }
+      return indices.map((i) => standardSteps[i]);
+    } else {
+      const numbers = [];
+      const stepSize = 900 / (steps - 1);
+      for (let i = 0; i < steps; i++) {
+        let number = Math.round(50 + stepSize * i);
+        if (number > 50 && number < 950) {
+          number = Math.round(number / 25) * 25;
+        }
+        if (number < 50) number = 50;
+        if (number > 950) number = 950;
+        numbers.push(number);
+      }
+      const uniqueNumbers = [...new Set(numbers)].sort((a, b) => a - b);
+      if (uniqueNumbers.length < steps) {
+        const additionalSteps = steps - uniqueNumbers.length;
+        const gaps = [];
+        for (let i = 0; i < uniqueNumbers.length - 1; i++) {
+          const gap = uniqueNumbers[i + 1] - uniqueNumbers[i];
+          if (gap > 25) {
+            gaps.push({
+              start: uniqueNumbers[i],
+              end: uniqueNumbers[i + 1],
+              size: gap
+            });
+          }
+        }
+        gaps.sort((a, b) => b.size - a.size);
+        for (let i = 0; i < Math.min(additionalSteps, gaps.length); i++) {
+          const gap = gaps[i];
+          const midPoint = Math.round((gap.start + gap.end) / 2 / 25) * 25;
+          if (midPoint > gap.start && midPoint < gap.end) {
+            uniqueNumbers.push(midPoint);
+          }
+        }
+        return uniqueNumbers.sort((a, b) => a - b);
+      }
+      return uniqueNumbers;
+    }
+  }
+  async function createColorVariables(colors, baseColor, groupName, steps) {
     try {
       let colorsCollection;
       const existingCollections = figma.variables.getLocalVariableCollections();
@@ -3269,7 +3318,7 @@ var plugin = (() => {
       if (!colorsCollection) {
         colorsCollection = figma.variables.createVariableCollection("Colors");
       }
-      const colorNumbers = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+      const colorNumbers = generateColorNumbers(steps);
       for (let i = 0; i < colors.length; i++) {
         const color = colors[i];
         if (!color) continue;
@@ -3305,7 +3354,7 @@ var plugin = (() => {
       if (msg.type === "generate-scale") {
         const colors = generateColorScale(
           msg.baseColor,
-          FIXED_STEPS,
+          msg.steps,
           msg.lightness,
           msg.chroma,
           msg.method
@@ -3318,13 +3367,13 @@ var plugin = (() => {
       } else if (msg.type === "add-to-figma") {
         const colors = generateColorScale(
           msg.baseColor,
-          FIXED_STEPS,
+          msg.steps,
           msg.lightness,
           msg.chroma,
           msg.method
         );
         const groupName = msg.groupName || "My Color Scale";
-        await createColorVariables(colors, msg.baseColor, groupName);
+        await createColorVariables(colors, msg.baseColor, groupName, msg.steps);
         const response = {
           type: "added-to-figma"
         };
