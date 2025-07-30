@@ -3205,7 +3205,7 @@ var plugin = (() => {
     "ease-out": (t) => 1 - Math.pow(1 - t, 2),
     "ease-in-out": (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
   };
-  function generateColorScale(baseColor, steps, lightness, chroma, method) {
+  function generateColorScale(baseColor, steps, lightness, chroma, method, mode = "light") {
     try {
       if (!baseColor || typeof baseColor !== "string") {
         throw new Error("Base color is required");
@@ -3226,23 +3226,32 @@ var plugin = (() => {
       console.log("Base color parsed:", parsedColor);
       const colors = [];
       const easing = easingFunctions[method] || easingFunctions.linear;
-      const minLightness = 0.05;
-      const maxLightness = 0.95;
+      const baseHue = parsedColor.h || 0;
       const baseChroma = parsedColor.c || 0.1;
-      const maxChroma = Math.min(0.4, baseChroma * 2);
+      const chromaReduction = mode === "dark" ? 0.9 : 1;
+      const adjustedBaseChroma = baseChroma * chromaReduction;
+      const maxChroma = Math.min(0.4, adjustedBaseChroma * 2);
+      let minLightness, maxLightness;
+      if (mode === "light") {
+        minLightness = 0.95;
+        maxLightness = 0.15;
+      } else {
+        minLightness = 0.07;
+        maxLightness = 0.85;
+      }
       for (let i = 0; i < steps; i++) {
         const t = i / (steps - 1);
         const easedT = easing(t);
         const interpolatedLightness = minLightness + (maxLightness - minLightness) * easedT;
         const finalLightness = minLightness + (interpolatedLightness - minLightness) * lightness;
         const chromaCurve = Math.sin(easedT * Math.PI);
-        const interpolatedChroma = baseChroma * chromaCurve * chroma;
+        const interpolatedChroma = adjustedBaseChroma * chromaCurve * chroma;
         const finalChroma = Math.min(maxChroma, Math.max(0, interpolatedChroma));
         const color = {
           mode: "oklch",
           l: finalLightness,
           c: finalChroma,
-          h: parsedColor.h || 0
+          h: baseHue
         };
         colors.push(color);
       }
@@ -3252,8 +3261,8 @@ var plugin = (() => {
         console.log("Color object:", color, "-> Hex:", hex2);
         return hex2;
       }).filter(Boolean);
-      const finalColors = hexColors.reverse();
-      console.log("Final hex colors with source color naturally included:", finalColors);
+      const finalColors = hexColors;
+      console.log(`Final hex colors for ${mode} mode:`, finalColors);
       return finalColors;
     } catch (error) {
       console.error("Error generating color scale:", error);
@@ -3310,7 +3319,7 @@ var plugin = (() => {
       return uniqueNumbers;
     }
   }
-  async function createColorVariables(colors, baseColor, groupName, steps) {
+  async function createColorVariables(lightColors, darkColors, baseColor, groupName, steps, exportMode) {
     try {
       let colorsCollection;
       const existingCollections = figma.variables.getLocalVariableCollections();
@@ -3318,10 +3327,23 @@ var plugin = (() => {
       if (!colorsCollection) {
         colorsCollection = figma.variables.createVariableCollection("Colors");
       }
+      let lightModeId;
+      let darkModeId;
+      const existingModes = colorsCollection.modes;
+      const lightMode = existingModes.find((mode) => mode.name === "Light");
+      const darkMode = existingModes.find((mode) => mode.name === "Dark");
+      if (lightMode) {
+        lightModeId = lightMode.modeId;
+      } else if (exportMode === "light" || exportMode === "both") {
+        lightModeId = colorsCollection.addMode("Light");
+      }
+      if (darkMode) {
+        darkModeId = darkMode.modeId;
+      } else if (exportMode === "dark" || exportMode === "both") {
+        darkModeId = colorsCollection.addMode("Dark");
+      }
       const colorNumbers = generateColorNumbers(steps);
-      for (let i = 0; i < colors.length; i++) {
-        const color = colors[i];
-        if (!color) continue;
+      for (let i = 0; i < Math.max(lightColors.length, (darkColors == null ? void 0 : darkColors.length) || 0); i++) {
         const colorNumber = colorNumbers[i];
         const variableName = `${groupName}/${colorNumber}`;
         const existingVariables = figma.variables.getLocalVariables();
@@ -3329,21 +3351,60 @@ var plugin = (() => {
           (variable) => variable.name === variableName && variable.variableCollectionId === colorsCollection.id
         );
         if (existingVariable) {
-          existingVariable.setValueForMode(colorsCollection.defaultModeId, {
-            r: parseInt(color.slice(1, 3), 16) / 255,
-            g: parseInt(color.slice(3, 5), 16) / 255,
-            b: parseInt(color.slice(5, 7), 16) / 255
-          });
+          if (exportMode === "light" || exportMode === "both") {
+            const lightColor = lightColors[i];
+            if (lightColor && lightModeId) {
+              existingVariable.setValueForMode(lightModeId, {
+                r: parseInt(lightColor.slice(1, 3), 16) / 255,
+                g: parseInt(lightColor.slice(3, 5), 16) / 255,
+                b: parseInt(lightColor.slice(5, 7), 16) / 255
+              });
+            }
+          }
+          if (exportMode === "dark" || exportMode === "both") {
+            const darkColor = darkColors == null ? void 0 : darkColors[i];
+            if (darkColor && darkModeId) {
+              existingVariable.setValueForMode(darkModeId, {
+                r: parseInt(darkColor.slice(1, 3), 16) / 255,
+                g: parseInt(darkColor.slice(3, 5), 16) / 255,
+                b: parseInt(darkColor.slice(5, 7), 16) / 255
+              });
+            }
+          }
         } else {
           const variable = figma.variables.createVariable(variableName, colorsCollection, "COLOR");
-          variable.setValueForMode(colorsCollection.defaultModeId, {
-            r: parseInt(color.slice(1, 3), 16) / 255,
-            g: parseInt(color.slice(3, 5), 16) / 255,
-            b: parseInt(color.slice(5, 7), 16) / 255
-          });
+          if (exportMode === "light" || exportMode === "both") {
+            const lightColor = lightColors[i];
+            if (lightColor && lightModeId) {
+              variable.setValueForMode(lightModeId, {
+                r: parseInt(lightColor.slice(1, 3), 16) / 255,
+                g: parseInt(lightColor.slice(3, 5), 16) / 255,
+                b: parseInt(lightColor.slice(5, 7), 16) / 255
+              });
+            }
+          }
+          if (exportMode === "dark" || exportMode === "both") {
+            const darkColor = darkColors == null ? void 0 : darkColors[i];
+            if (darkColor && darkModeId) {
+              variable.setValueForMode(darkModeId, {
+                r: parseInt(darkColor.slice(1, 3), 16) / 255,
+                g: parseInt(darkColor.slice(3, 5), 16) / 255,
+                b: parseInt(darkColor.slice(5, 7), 16) / 255
+              });
+            }
+          }
         }
       }
-      figma.notify(`Created ${colors.length} color variables in "${groupName}" group within Colors collection`);
+      let modeText = "";
+      if (exportMode === "light") {
+        modeText = " with Light mode only";
+      } else if (exportMode === "dark") {
+        modeText = " with Dark mode only";
+      } else if (exportMode === "both") {
+        modeText = " with Light and Dark modes";
+      }
+      const colorCount = exportMode === "both" ? Math.max(lightColors.length, (darkColors == null ? void 0 : darkColors.length) || 0) : exportMode === "light" ? lightColors.length : (darkColors == null ? void 0 : darkColors.length) || 0;
+      figma.notify(`Created ${colorCount} color variables in "${groupName}" group within Colors collection${modeText}`);
     } catch (error) {
       console.error("Error creating color variables:", error);
       throw new Error("Failed to create color variables in Figma");
@@ -3352,28 +3413,50 @@ var plugin = (() => {
   figma.ui.onmessage = async (msg) => {
     try {
       if (msg.type === "generate-scale") {
-        const colors = generateColorScale(
+        const lightColors = generateColorScale(
           msg.baseColor,
           msg.steps,
           msg.lightness,
           msg.chroma,
-          msg.method
+          msg.method,
+          "light"
+        );
+        const darkColors = generateColorScale(
+          msg.baseColor,
+          msg.steps,
+          msg.lightness,
+          msg.chroma,
+          msg.method,
+          "dark"
         );
         const response = {
           type: "scale-generated",
-          colors
+          colors: lightColors,
+          darkColors
         };
         figma.ui.postMessage(response);
       } else if (msg.type === "add-to-figma") {
-        const colors = generateColorScale(
+        const lightColors = generateColorScale(
           msg.baseColor,
           msg.steps,
           msg.lightness,
           msg.chroma,
-          msg.method
+          msg.method,
+          "light"
         );
+        let darkColors;
+        if (msg.exportMode === "dark" || msg.exportMode === "both") {
+          darkColors = generateColorScale(
+            msg.baseColor,
+            msg.steps,
+            msg.lightness,
+            msg.chroma,
+            msg.method,
+            "dark"
+          );
+        }
         const groupName = msg.groupName || "My Color Scale";
-        await createColorVariables(colors, msg.baseColor, groupName, msg.steps);
+        await createColorVariables(lightColors, darkColors, msg.baseColor, groupName, msg.steps, msg.exportMode || "light");
         const response = {
           type: "added-to-figma"
         };

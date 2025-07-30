@@ -39,6 +39,147 @@
       flex: 1;
     }
 
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--figma-color-border);
+      margin-bottom: 12px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px 12px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 450;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+      color: var(--figma-color-text-secondary);
+    }
+
+    .tab.active {
+      color: var(--figma-color-text);
+      border-bottom-color: #18a0fb;
+    }
+
+    .tab:hover {
+      color: var(--figma-color-text);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .checkbox-group {
+      margin-bottom: 12px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: var(--figma-color-text);
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
+      flex: none;
+      height: auto;
+      padding: 0;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border: 1px solid var(--figma-color-border);
+      border-radius: 2px;
+      background: var(--figma-color-bg-secondary);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox-item input[type="checkbox"]:hover {
+      border-color: var(--figma-color-border-selected);
+    }
+
+    .checkbox-item input[type="checkbox"]:checked {
+      background: #18a0fb;
+      border-color: #18a0fb;
+    }
+
+    .checkbox-item input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      left: 3px;
+      top: 1px;
+      width: 6px;
+      height: 8px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    .checkbox-item label {
+      cursor: pointer;
+      user-select: none;
+      line-height: 1.2;
+    }
+
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .radio-item {
+      display: flex;
+      align-items: center;
+      font-size: 11px;
+      color: var(--figma-color-text);
+    }
+
+    .radio-item input[type="radio"] {
+      width: auto;
+      margin-right: 8px;
+      flex: none;
+      height: auto;
+      padding: 0;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border: 1px solid var(--figma-color-border);
+      border-radius: 50%;
+      background: var(--figma-color-bg-secondary);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .radio-item input[type="radio"]:hover {
+      border-color: var(--figma-color-border-selected);
+    }
+
+    .radio-item input[type="radio"]:checked {
+      border-color: #18a0fb;
+      border-width: 3px;
+      background: white;
+    }
+
+    .radio-item label {
+      cursor: pointer;
+      user-select: none;
+      line-height: 1.2;
+    }
+
     .section {
       padding: 0 20px 12px;
       border-bottom: 1px solid var(--figma-color-border);
@@ -350,6 +491,32 @@
           Variable group name (within Colors collection)<br>
           <span style="font-size: 10px;">Colors will be named like "primary/100", "primary/200", etc.</span>
         </div>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <label style="margin-bottom: 8px; display: block;">Export Mode:</label>
+            <div class="radio-group">
+              <div class="radio-item">
+                <input type="radio" id="exportLight" name="exportMode" value="light" checked>
+                <label for="exportLight">Light Mode Only</label>
+              </div>
+              <div class="radio-item">
+                <input type="radio" id="exportDark" name="exportMode" value="dark">
+                <label for="exportDark">Dark Mode Only</label>
+              </div>
+              <div class="radio-item">
+                <input type="radio" id="exportBoth" name="exportMode" value="both">
+                <label for="exportBoth">Both Light & Dark</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom: 12px; font-size: 10px; color: var(--figma-color-text-secondary); line-height: 1.3;">
+          <strong>Dark Mode Features:</strong><br>
+          • Preserves brand color hue identity<br>
+          • Reduces chroma by 10% for better dark surface compatibility<br>
+          • Avoids pure black/white extremes<br>
+          • Uses compressed lightness range for optimal contrast
+        </div>
         <button class="button button-primary" id="addToFigmaBtn">Add to Figma Variables</button>
       </div>
 
@@ -360,9 +527,25 @@
 
     <div class="preview-panel">
       <div class="section-title">Scale Preview</div>
-      <div class="color-scale" id="colorScale">
-        <div class="preview-placeholder">
-          Generate a scale<br>to see preview
+      <div class="tabs">
+        <div class="tab active" data-tab="light">Light</div>
+        <div class="tab" data-tab="dark">Dark</div>
+      </div>
+      <div style="font-size: 10px; color: var(--figma-color-text-secondary); margin-bottom: 8px; padding: 0 4px;">
+        Switch tabs to preview both light and dark mode scales
+      </div>
+      <div class="tab-content active" id="light-tab-content">
+        <div class="color-scale" id="colorScaleLight">
+          <div class="preview-placeholder">
+            Generate a scale<br>to see preview
+          </div>
+        </div>
+      </div>
+      <div class="tab-content" id="dark-tab-content">
+        <div class="color-scale" id="colorScaleDark">
+          <div class="preview-placeholder">
+            Generate a scale<br>to see preview
+          </div>
         </div>
       </div>
     </div>
@@ -399,9 +582,11 @@
     const stepsInput = document.getElementById('stepsInput');
     const stepsIcon = document.getElementById('stepsIcon');
     const groupNameInput = document.getElementById('groupNameInput');
-    const colorScale = document.getElementById('colorScale');
+    const colorScaleLight = document.getElementById('colorScaleLight');
+    const colorScaleDark = document.getElementById('colorScaleDark');
     const addToFigmaBtn = document.getElementById('addToFigmaBtn');
     const message = document.getElementById('message');
+    const exportModeRadios = document.querySelectorAll('input[name="exportMode"]');
 
     // Debounce function to prevent too many rapid calls
     let debounceTimer;
@@ -428,6 +613,9 @@
     groupNameInput.addEventListener('focus', selectAllText);
     interpolationMethod.addEventListener('change', () => debounce(autoGenerateScale, 100));
     addToFigmaBtn.addEventListener('click', addToFigma);
+    exportModeRadios.forEach(radio => {
+      radio.addEventListener('change', () => debounce(autoGenerateScale, 100));
+    });
 
     // Drag functionality for scale settings
     setupDragIcon(lightnessIcon, lightnessInput, true);
@@ -682,6 +870,7 @@
       const chroma = parseInt(chromaInput.value.replace('%', '')) / 100;
       const steps = parseInt(stepsInput.value) || 11;
       const method = interpolationMethod.value;
+      const exportMode = Array.from(exportModeRadios).find(radio => radio.checked)?.value || 'light';
 
       // Send to plugin with hash symbol added
       parent.postMessage({
@@ -691,7 +880,8 @@
           lightness,
           chroma,
           steps,
-          method
+          method,
+          exportMode
         }
       }, '*');
     }
@@ -720,6 +910,7 @@
       const steps = parseInt(stepsInput.value) || 11;
       const method = interpolationMethod.value;
       const groupName = groupNameInput.value.trim() || 'My Color Scale';
+      const exportMode = Array.from(exportModeRadios).find(radio => radio.checked)?.value || 'light';
 
       parent.postMessage({
         pluginMessage: {
@@ -729,7 +920,8 @@
           chroma,
           steps,
           method,
-          groupName
+          groupName,
+          exportMode
         }
       }, '*');
 
@@ -738,7 +930,7 @@
 
     // Listen for messages from plugin
     window.addEventListener('message', (event) => {
-      const { type, colors, error, defaultColor } = event.data.pluginMessage;
+      const { type, colors, darkColors, error, defaultColor } = event.data.pluginMessage;
 
       if (type === 'init' && defaultColor) {
         // Remove hash symbol if present and set as uppercase
@@ -746,7 +938,13 @@
         colorInput.value = cleanColor;
         updateColorPreview();
       } else if (type === 'scale-generated') {
-        displayColorScale(colors);
+        displayColorScale(colors, 'light');
+        if (darkColors) {
+          displayColorScale(darkColors, 'dark');
+        } else {
+          // Show placeholder if no dark colors generated
+          colorScaleDark.innerHTML = '<div class="preview-placeholder">No dark mode colors generated.</div>';
+        }
       } else if (type === 'added-to-figma') {
         showMessage('Color scale added to Figma variables!');
         addToFigmaBtn.classList.remove('loading');
@@ -756,17 +954,48 @@
       }
     });
 
-    function displayColorScale(colors) {
-      colorScale.innerHTML = '';
+    function displayColorScale(colors, mode) {
+      const scaleElement = mode === 'light' ? colorScaleLight : colorScaleDark;
+      
+      if (colors.length === 0) {
+        scaleElement.innerHTML = '<div class="preview-placeholder">No colors generated.</div>';
+        return;
+      }
+
+      scaleElement.innerHTML = '';
       colors.forEach(color => {
         const swatch = document.createElement('div');
         swatch.className = 'color-swatch';
         swatch.style.backgroundColor = color;
         swatch.setAttribute('data-color', color);
         swatch.title = color;
-        colorScale.appendChild(swatch);
+        scaleElement.appendChild(swatch);
       });
     }
+
+    // Tab functionality
+    document.addEventListener('DOMContentLoaded', () => {
+      const tabs = document.querySelectorAll('.tab');
+      const tabContents = document.querySelectorAll('.tab-content');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const targetTab = tab.dataset.tab;
+          
+          // Update tab states
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          
+          // Update tab content visibility
+          tabContents.forEach(content => {
+            content.classList.remove('active');
+            if (content.id === `${targetTab}-tab-content`) {
+              content.classList.add('active');
+            }
+          });
+        });
+      });
+    });
   </script>
 </body>
 </html>
