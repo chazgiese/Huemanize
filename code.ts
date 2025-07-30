@@ -329,8 +329,21 @@ async function createColorVariables(lightColors: string[], darkColors: string[] 
     let colorsCollection: VariableCollection | undefined;
     
     // Check if a "Colors" collection already exists
-    const existingCollections = figma.variables.getLocalVariableCollections();
-    colorsCollection = existingCollections.find((collection: VariableCollection) => collection.name === "Colors");
+    const existingVariables = await figma.variables.getLocalVariablesAsync();
+    
+    // Find the Colors collection
+    let colorsCollectionId: string | undefined;
+    for (const variable of existingVariables) {
+      const collection = await figma.variables.getVariableCollectionByIdAsync(variable.variableCollectionId);
+      if (collection?.name === "Colors") {
+        colorsCollectionId = variable.variableCollectionId;
+        break;
+      }
+    }
+    
+    colorsCollection = colorsCollectionId ? 
+      await figma.variables.getVariableCollectionByIdAsync(colorsCollectionId) : 
+      undefined;
 
     if (!colorsCollection) {
       // Create a new "Colors" collection if it doesn't exist
@@ -369,8 +382,8 @@ async function createColorVariables(lightColors: string[], darkColors: string[] 
       const variableName = `${groupName}/${colorNumber}`;
       
       // Check if variable already exists
-      const existingVariables = figma.variables.getLocalVariables();
-      const existingVariable = existingVariables.find((variable: Variable) => 
+      const allVariables = await figma.variables.getLocalVariablesAsync();
+      const existingVariable = allVariables.find((variable: Variable) => 
         variable.name === variableName && variable.variableCollectionId === colorsCollection!.id
       );
 

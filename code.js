@@ -3375,8 +3375,16 @@ var plugin = (() => {
   async function createColorVariables(lightColors, darkColors, baseColor, groupName, steps, exportMode) {
     try {
       let colorsCollection;
-      const existingCollections = figma.variables.getLocalVariableCollections();
-      colorsCollection = existingCollections.find((collection) => collection.name === "Colors");
+      const existingVariables = await figma.variables.getLocalVariablesAsync();
+      let colorsCollectionId;
+      for (const variable of existingVariables) {
+        const collection = await figma.variables.getVariableCollectionByIdAsync(variable.variableCollectionId);
+        if ((collection == null ? void 0 : collection.name) === "Colors") {
+          colorsCollectionId = variable.variableCollectionId;
+          break;
+        }
+      }
+      colorsCollection = colorsCollectionId ? await figma.variables.getVariableCollectionByIdAsync(colorsCollectionId) : void 0;
       if (!colorsCollection) {
         colorsCollection = figma.variables.createVariableCollection("Colors");
       }
@@ -3399,8 +3407,8 @@ var plugin = (() => {
       for (let i = 0; i < Math.max(lightColors.length, (darkColors == null ? void 0 : darkColors.length) || 0); i++) {
         const colorNumber = colorNumbers[i];
         const variableName = `${groupName}/${colorNumber}`;
-        const existingVariables = figma.variables.getLocalVariables();
-        const existingVariable = existingVariables.find(
+        const allVariables = await figma.variables.getLocalVariablesAsync();
+        const existingVariable = allVariables.find(
           (variable) => variable.name === variableName && variable.variableCollectionId === colorsCollection.id
         );
         if (existingVariable) {
