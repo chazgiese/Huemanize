@@ -19,24 +19,35 @@
       color: var(--figma-color-text);
       width: 100%;
       max-width: 100%;
+      height: 100vh;
+      overflow: hidden;
     }
 
     .main-layout {
       display: flex;
       flex-direction: row;
-      align-items: flex-start;
+      align-items: stretch;
       justify-content: flex-start;
+      height: 100%;
     }
 
     .controls-panel {
       flex: 1;
       min-width: 0;
       border-right: 1px solid var(--figma-color-border);
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .preview-panel {
       width: 120px;
       flex: 1;
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .tabs {
@@ -228,6 +239,7 @@
       flex-direction: column;
       gap: 8px;
       margin-top: 4px;
+      margin-bottom: 12px
     }
 
     .color-swatch {
@@ -438,21 +450,21 @@
     </div>
 
     <div class="preview-panel">
-      <div class="section">
-        <div class="section-title"><span>Preview</span>
+      <div class="section" style="flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 0;">
+        <div class="section-title" style="padding: 0 20px"><span>Preview</span>
           <div class="tabs">
             <div class="tab active" data-tab="light">Light</div>
             <div class="tab" data-tab="dark">Dark</div>
           </div>
         </div>
-        <div class="tab-content active" id="light-tab-content">
+        <div class="tab-content active" id="light-tab-content" style="flex: 1; overflow-y: auto; padding: 0 20px;">
           <div class="color-scale" id="colorScaleLight">
             <div class="preview-placeholder">
               Generate a scale<br>to see preview
             </div>
           </div>
         </div>
-        <div class="tab-content" id="dark-tab-content">
+        <div class="tab-content" id="dark-tab-content" style="flex: 1; overflow-y: auto;">
           <div class="color-scale" id="colorScaleDark">
             <div class="preview-placeholder">
               Generate a scale<br>to see preview
