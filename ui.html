@@ -263,7 +263,7 @@
         <div class="section-title">Base Color</div>
         <div class="input-group">
           <div class="input-container">
-            <input type="text" class="input-with-icon" id="colorInput" placeholder="FF6B6B" maxlength="6">
+            <input type="text" class="input-with-icon" id="colorInput" placeholder="FF6B6B">
             <div class="input-icon-container">
               <div class="color-preview" id="colorPreview"></div>
             </div>
@@ -453,6 +453,7 @@
         debounce(autoGenerateScale, 150);
       } else {
         colorPreview.style.backgroundColor = '#f0f0f0';
+        // Don't show error during typing, only on blur/enter
       }
     }
 
@@ -510,16 +511,41 @@
       // If empty, clear the input
       if (value === '') {
         input.value = '';
+        colorError.style.display = 'none';
         return;
+      }
+      
+      // Handle 3-character hex codes (expand to 6 characters like browsers do)
+      if (value.length === 3 && /^[0-9A-F]{3}$/i.test(value)) {
+        value = value.split('').map(char => char + char).join('');
+      }
+      
+      // Keep only the first 6 characters if longer
+      if (value.length > 6) {
+        value = value.substring(0, 6);
       }
       
       // Validate hex format (6 characters, 0-9 or A-F)
       const hexRegex = /^[0-9A-F]{6}$/i;
       if (!hexRegex.test(value)) {
-        // Show error but don't clear the input
-        colorError.textContent = 'Please enter a valid hex color (e.g., FF6B6B)';
-        colorError.style.display = 'block';
-        return;
+        // Try to fix invalid hex by replacing invalid characters
+        let fixedValue = '';
+        for (let i = 0; i < Math.min(value.length, 6); i++) {
+          const char = value[i];
+          if (/[0-9A-F]/i.test(char)) {
+            fixedValue += char.toUpperCase();
+          } else {
+            // Replace invalid characters with '0'
+            fixedValue += '0';
+          }
+        }
+        
+        // Pad to 6 characters if needed
+        while (fixedValue.length < 6) {
+          fixedValue += '0';
+        }
+        
+        value = fixedValue;
       }
       
       // Format as uppercase without hash
