@@ -41,29 +41,34 @@
 
     .tabs {
       display: flex;
-      border-bottom: 1px solid var(--figma-color-border);
-      margin-bottom: 12px;
+      column-gap: 4px;
+      margin-right: -8px;
     }
 
     .tab {
       flex: 1;
-      padding: 8px 12px;
+      padding: 0 8px;
+      height: 24px;
       text-align: center;
       font-size: 11px;
+      letter-spacing: 0.05px;
       font-weight: 450;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
+      border-radius: 5px;
+      cursor: default;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: all 0.2s ease;
-      color: var(--figma-color-text-secondary);
+      color: var(--figma-color-text-tertiary);
     }
 
     .tab.active {
       color: var(--figma-color-text);
-      border-bottom-color: #18a0fb;
+      background-color: var(--figma-color-bg-secondary);
     }
 
     .tab:hover {
-      color: var(--figma-color-text);
+      background-color: var(--figma-color-bg-secondary);
     }
 
     .tab-content {
@@ -74,120 +79,21 @@
       display: block;
     }
 
-    .checkbox-group {
-      margin-bottom: 12px;
-    }
-
-    .checkbox-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 8px;
-      font-size: 11px;
-      color: var(--figma-color-text);
-    }
-
-    .checkbox-item input[type="checkbox"] {
-      width: auto;
-      margin-right: 8px;
-      flex: none;
-      height: auto;
-      padding: 0;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-      width: 14px;
-      height: 14px;
-      border: 1px solid var(--figma-color-border);
-      border-radius: 2px;
-      background: var(--figma-color-bg-secondary);
-      cursor: pointer;
-      position: relative;
-      transition: all 0.2s ease;
-    }
-
-    .checkbox-item input[type="checkbox"]:hover {
-      border-color: var(--figma-color-border-selected);
-    }
-
-    .checkbox-item input[type="checkbox"]:checked {
-      background: #18a0fb;
-      border-color: #18a0fb;
-    }
-
-    .checkbox-item input[type="checkbox"]:checked::after {
-      content: '';
-      position: absolute;
-      left: 3px;
-      top: 1px;
-      width: 6px;
-      height: 8px;
-      border: solid white;
-      border-width: 0 2px 2px 0;
-      transform: rotate(45deg);
-    }
-
-    .checkbox-item label {
-      cursor: pointer;
-      user-select: none;
-      line-height: 1.2;
-    }
-
-    .radio-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .radio-item {
-      display: flex;
-      align-items: center;
-      font-size: 11px;
-      color: var(--figma-color-text);
-    }
-
-    .radio-item input[type="radio"] {
-      width: auto;
-      margin-right: 8px;
-      flex: none;
-      height: auto;
-      padding: 0;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-      width: 14px;
-      height: 14px;
-      border: 1px solid var(--figma-color-border);
-      border-radius: 50%;
-      background: var(--figma-color-bg-secondary);
-      cursor: pointer;
-      position: relative;
-      transition: all 0.2s ease;
-    }
-
-    .radio-item input[type="radio"]:hover {
-      border-color: var(--figma-color-border-selected);
-    }
-
-    .radio-item input[type="radio"]:checked {
-      border-color: #18a0fb;
-      border-width: 3px;
-      background: white;
-    }
-
-    .radio-item label {
-      cursor: pointer;
-      user-select: none;
-      line-height: 1.2;
-    }
-
     .section {
       padding: 0 20px 12px;
       border-bottom: 1px solid var(--figma-color-border);
+      margin-bottom: -1px;
+    }
+
+    .section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
     }
 
     .section-title {
       display: flex;
-      justify-content: flex-start;
+      justify-content: space-between;
+      flex-direction: row;
       height: 40px;
       align-items: center;
       font-size: 11px;
@@ -214,6 +120,22 @@
 
     .input-container:hover input {
       border-color: var(--figma-color-border);
+    }
+
+    .input-container label {
+      color: var(--figma-color-text-secondary);
+      font-weight: 450;
+      letter-spacing: 0.05px;
+      font-size: 11px;
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
     }
 
     input, select {
@@ -245,6 +167,15 @@
       box-shadow: none;
     }
 
+    input[type="radio"] {
+      border: 1px solid var(--figma-color-border);
+      background: transparent;
+    }
+
+    input[type="radio"]:checked {
+      border: 1px solid var(--figma-color-border-selected);
+    }
+
     .input-with-icon {
       padding-left: 24px;
     }
@@ -267,6 +198,7 @@
       user-select: none;
       transition: color 0.2s ease;
     }
+
     .input-icon svg {
       fill: var(--figma-color-text-secondary);
     }
@@ -294,23 +226,16 @@
     .color-scale {
       display: flex;
       flex-direction: column;
-      gap: 1px;
-      margin: 16px 0;
-      border-radius: 6px;
-      overflow: hidden;
-      border: 1px solid #ddd;
-      height: 200px;
+      gap: 8px;
+      margin-top: 4px;
     }
 
     .color-swatch {
-      flex: 1;
+      height: 24px;
+      border-radius: 5px;
       cursor: pointer;
-      transition: transform 0.1s ease;
       position: relative;
-    }
-
-    .color-swatch:hover {
-      transform: scaleX(1.02);
+      border: 1px solid var(--figma-color-border);
     }
 
     .color-swatch::after {
@@ -335,23 +260,27 @@
     }
 
     .button {
+      color: var(--figma-color-text);
       width: 100%;
-      padding: 10px 16px;
+      padding: 4px 8px;
       border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
+      border-radius: 5px;
+      font-size: 11px;
+      line-height: 16px;
+      letter-spacing: 0.05px;
+      font-weight: 450;
+      cursor: default;
       transition: all 0.2s ease;
+      height: 24px;
     }
 
     .button-primary {
-      background: #18a0fb;
-      color: white;
+      background: var(--figma-color-bg-brand);
+      color: var(--figma-color-text-onbrand);
     }
 
-    .button-primary:hover {
-      background: #0d8ce6;
+    .button-primary:pressed {
+      background: var(--figma-color-bg-brand-pressed);
     }
 
     .button-secondary {
@@ -487,68 +416,52 @@
             </div>
           </div>
         </div>
-        <div style="margin-bottom: 12px; font-size: 11px; color: var(--figma-color-text-secondary);">
-          Variable group name (within Colors collection)<br>
-          <span style="font-size: 10px;">Colors will be named like "primary/100", "primary/200", etc.</span>
-        </div>
-        <div class="checkbox-group">
-          <div class="checkbox-item">
-            <label style="margin-bottom: 8px; display: block;">Export Mode:</label>
-            <div class="radio-group">
-              <div class="radio-item">
-                <input type="radio" id="exportLight" name="exportMode" value="light" checked>
-                <label for="exportLight">Light Mode Only</label>
-              </div>
-              <div class="radio-item">
-                <input type="radio" id="exportDark" name="exportMode" value="dark">
-                <label for="exportDark">Dark Mode Only</label>
-              </div>
-              <div class="radio-item">
-                <input type="radio" id="exportBoth" name="exportMode" value="both">
-                <label for="exportBoth">Both Light & Dark</label>
-              </div>
-            </div>
+        <div class="input-group">
+          <div class="input-container">
+            <input type="radio" id="exportBoth" name="exportMode" value="both" checked>
+            <label for="exportBoth">Both</label>
+          </div>
+          <div class="input-container">
+            <input type="radio" id="exportLight" name="exportMode" value="light">
+            <label for="exportLight">Light</label>
+          </div>
+          <div class="input-container">
+            <input type="radio" id="exportDark" name="exportMode" value="dark">
+            <label for="exportDark">Dark</label>
           </div>
         </div>
-        <div style="margin-bottom: 12px; font-size: 10px; color: var(--figma-color-text-secondary); line-height: 1.3;">
-          <strong>Dark Mode Features:</strong><br>
-          • Preserves brand color hue identity<br>
-          • Reduces chroma by 10% for better dark surface compatibility<br>
-          • Avoids pure black/white extremes<br>
-          • Uses compressed lightness range for optimal contrast
+        <div class="input-group">
+          <button class="button button-primary" id="addToFigmaBtn">Generate variables</button>
         </div>
-        <button class="button button-primary" id="addToFigmaBtn">Add to Figma Variables</button>
+        <div id="message" style="display: none;"></div>
       </div>
-
-
-      
-      <div id="message" style="display: none;"></div>
     </div>
 
     <div class="preview-panel">
-      <div class="section-title">Scale Preview</div>
-      <div class="tabs">
-        <div class="tab active" data-tab="light">Light</div>
-        <div class="tab" data-tab="dark">Dark</div>
-      </div>
-      <div style="font-size: 10px; color: var(--figma-color-text-secondary); margin-bottom: 8px; padding: 0 4px;">
-        Switch tabs to preview both light and dark mode scales
-      </div>
-      <div class="tab-content active" id="light-tab-content">
-        <div class="color-scale" id="colorScaleLight">
-          <div class="preview-placeholder">
-            Generate a scale<br>to see preview
+      <div class="section">
+        <div class="section-title"><span>Preview</span>
+          <div class="tabs">
+            <div class="tab active" data-tab="light">Light</div>
+            <div class="tab" data-tab="dark">Dark</div>
           </div>
         </div>
-      </div>
-      <div class="tab-content" id="dark-tab-content">
-        <div class="color-scale" id="colorScaleDark">
-          <div class="preview-placeholder">
-            Generate a scale<br>to see preview
+        <div class="tab-content active" id="light-tab-content">
+          <div class="color-scale" id="colorScaleLight">
+            <div class="preview-placeholder">
+              Generate a scale<br>to see preview
+            </div>
+          </div>
+        </div>
+        <div class="tab-content" id="dark-tab-content">
+          <div class="color-scale" id="colorScaleDark">
+            <div class="preview-placeholder">
+              Generate a scale<br>to see preview
+            </div>
           </div>
         </div>
       </div>
     </div>
+
   </div>
 
   <script>

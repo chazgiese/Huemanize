@@ -3526,7 +3526,7 @@ var plugin = (() => {
   };
   figma.showUI(__html__, {
     width: 480,
-    height: 416,
+    height: 400,
     themeColors: true
   });
   var initialColor = generateRandomColor();
