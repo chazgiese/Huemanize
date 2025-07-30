@@ -739,6 +739,9 @@
       // Format as uppercase without hash
       input.value = value.toUpperCase();
       colorError.style.display = 'none';
+      
+      // Update color preview and generate scale after formatting
+      updateColorPreview();
     }
 
     // Percentage input validation and formatting

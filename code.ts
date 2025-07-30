@@ -101,10 +101,13 @@ function generateColorScale(baseColor: string, steps: number, lightness: number,
     const baseHue = parsedColor.h || 0;
     const baseChroma = parsedColor.c || 0.1;
     
+    // Check if the base color is achromatic (white, black, or gray)
+    const isAchromatic = baseChroma < 0.01 || (parsedColor.l !== undefined && (parsedColor.l > 0.99 || parsedColor.l < 0.01));
+    
     // Dark mode adjustments
     const chromaReduction = mode === 'dark' ? 0.9 : 1.0; // Reduce chroma by 10% in dark mode
-    const adjustedBaseChroma = baseChroma * chromaReduction;
-    const maxChroma = Math.min(0.5, adjustedBaseChroma * 2.5); // Allow higher max chroma for better saturation
+    const adjustedBaseChroma = isAchromatic ? 0 : baseChroma * chromaReduction;
+    const maxChroma = isAchromatic ? 0 : Math.min(0.5, adjustedBaseChroma * 2.5); // Allow higher max chroma for better saturation
     
     // Define lightness ranges based on mode and method
     let minLightness: number, maxLightness: number;
@@ -203,7 +206,7 @@ function generateColorScale(baseColor: string, steps: number, lightness: number,
       }
       
       const interpolatedChroma = adjustedBaseChroma * chromaCurve * chroma;
-      const finalChroma = Math.min(maxChroma, Math.max(minChroma, interpolatedChroma));
+      const finalChroma = isAchromatic ? 0 : Math.min(maxChroma, Math.max(minChroma, interpolatedChroma));
       
       // Final safety check for lightness bounds - allow more sacrifice of hue at light end
       const minBound = isCatmullRom ? 0.01 : 0.03;

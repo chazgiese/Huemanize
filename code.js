@@ -3228,9 +3228,10 @@ var plugin = (() => {
       const easing = easingFunctions[method] || easingFunctions.linear;
       const baseHue = parsedColor.h || 0;
       const baseChroma = parsedColor.c || 0.1;
+      const isAchromatic = baseChroma < 0.01 || parsedColor.l !== void 0 && (parsedColor.l > 0.99 || parsedColor.l < 0.01);
       const chromaReduction = mode === "dark" ? 0.9 : 1;
-      const adjustedBaseChroma = baseChroma * chromaReduction;
-      const maxChroma = Math.min(0.5, adjustedBaseChroma * 2.5);
+      const adjustedBaseChroma = isAchromatic ? 0 : baseChroma * chromaReduction;
+      const maxChroma = isAchromatic ? 0 : Math.min(0.5, adjustedBaseChroma * 2.5);
       let minLightness, maxLightness;
       const isCatmullRom = method === "catmull-rom";
       if (mode === "light") {
@@ -3295,7 +3296,7 @@ var plugin = (() => {
             minChroma = 0.05;
         }
         const interpolatedChroma = adjustedBaseChroma * chromaCurve * chroma;
-        const finalChroma = Math.min(maxChroma, Math.max(minChroma, interpolatedChroma));
+        const finalChroma = isAchromatic ? 0 : Math.min(maxChroma, Math.max(minChroma, interpolatedChroma));
         const minBound = isCatmullRom ? 0.01 : 0.03;
         const maxBound = isCatmullRom ? 0.999 : 0.99;
         const clampedLightness = Math.max(minBound, Math.min(maxBound, finalLightness));
