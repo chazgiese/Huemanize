@@ -3231,6 +3231,24 @@ var plugin = (() => {
     "ease-out": (t) => 1 - Math.pow(1 - t, 2),
     "ease-in-out": (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
   };
+  function generateTailwindScale(baseColor, steps, lightness, chroma) {
+    const parsed = oklch(baseColor);
+    if (!parsed) {
+      throw new Error("Invalid color format");
+    }
+    const lStart = 0.98;
+    const lEnd = 0.12;
+    const baseChroma = Math.min(0.5, parsed.c || 0);
+    const colors = [];
+    for (let i = 0; i < steps; i++) {
+      const t = i / (steps - 1);
+      const targetL = lStart + (lEnd - lStart) * t;
+      const l = parsed.l * (1 - lightness) + targetL * lightness;
+      const c4 = baseChroma * chroma * (1 - 0.8 * Math.abs(2 * t - 1));
+      colors.push(formatHex({ mode: "oklch", l, c: c4, h: parsed.h || 0 }));
+    }
+    return colors;
+  }
   function generateColorScale(baseColor, steps, lightness, chroma, method, mode = "light") {
     try {
       if (!baseColor || typeof baseColor !== "string") {
@@ -3250,6 +3268,9 @@ var plugin = (() => {
         throw new Error("Invalid color format");
       }
       console.log("Base color parsed:", parsedColor);
+      if (method === "tailwind") {
+        return generateTailwindScale(baseColor, steps, lightness, chroma);
+      }
       const colors = [];
       const easing = easingFunctions[method] || easingFunctions.linear;
       const baseHue = parsedColor.h || 0;
