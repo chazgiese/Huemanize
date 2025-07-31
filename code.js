@@ -21,7 +21,8 @@ var plugin = (() => {
 
   // node_modules/culori/src/rgb/parseNumber.js
   var parseNumber = (color, len) => {
-    if (typeof color !== "number") return;
+    if (typeof color !== "number")
+      return;
     if (len === 3) {
       return {
         mode: "rgb",
@@ -803,7 +804,8 @@ var plugin = (() => {
       g: fn(g),
       b: fn(b)
     };
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   };
   var convertRgbToLrgb_default = convertRgbToLrgb;
@@ -839,7 +841,8 @@ var plugin = (() => {
       g: fn2(g),
       b: fn2(b)
     };
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   };
   var convertLrgbToRgb_default = convertLrgbToRgb;
@@ -918,8 +921,10 @@ var plugin = (() => {
       l,
       s: l === 0 || l === 1 ? void 0 : Math.sqrt(x * x + y * y) / (M[4] * l * (1 - l))
     };
-    if (res.s) res.h = Math.atan2(y, x) * radToDeg - 120;
-    if (alpha !== void 0) res.alpha = alpha;
+    if (res.s)
+      res.h = Math.atan2(y, x) * radToDeg - 120;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   };
   var convertRgbToCubehelix_default = convertRgbToCubehelix;
@@ -934,7 +939,8 @@ var plugin = (() => {
     res.r = l + amp * (M[0] * cosh + M[1] * sinh);
     res.g = l + amp * (M[2] * cosh + M[3] * sinh);
     res.b = l + amp * (M[4] * cosh + M[5] * sinh);
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   };
   var convertCubehelixToRgb_default = convertCubehelixToRgb;
@@ -1028,8 +1034,10 @@ var plugin = (() => {
   var convertLabToLch = ({ l, a, b, alpha }, mode = "lch") => {
     let c4 = Math.sqrt(a * a + b * b);
     let res = { mode, l, c: c4 };
-    if (c4) res.h = normalizeHue_default(Math.atan2(b, a) * 180 / Math.PI);
-    if (alpha !== void 0) res.alpha = alpha;
+    if (c4)
+      res.h = normalizeHue_default(Math.atan2(b, a) * 180 / Math.PI);
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   };
   var convertLabToLch_default = convertLabToLch;
@@ -1042,7 +1050,8 @@ var plugin = (() => {
       a: c4 ? c4 * Math.cos(h / 180 * Math.PI) : 0,
       b: c4 ? c4 * Math.sin(h / 180 * Math.PI) : 0
     };
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   };
   var convertLchToLab_default = convertLchToLab;
@@ -1140,7 +1149,8 @@ var plugin = (() => {
       res.a = e4 * cos\u03B8 - f3 / 0.83 * sin\u03B8;
       res.b = e4 * sin\u03B8 + f3 / 0.83 * cos\u03B8;
     }
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   };
   var convertDlchToLab65_default = convertDlchToLab65;
@@ -1158,7 +1168,8 @@ var plugin = (() => {
     if (res.c) {
       res.h = normalizeHue_default((Math.atan2(f3, e4) + \u03B8) / Math.PI * 180);
     }
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   };
   var convertLab65ToDlch_default = convertLab65ToDlch;
@@ -1290,7 +1301,8 @@ var plugin = (() => {
         res = { r: i * (1 - s), g: i * (1 - s), b: i * (1 - s) };
     }
     res.mode = "rgb";
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   }
 
@@ -1304,7 +1316,8 @@ var plugin = (() => {
     };
     if (M2 - m !== 0)
       res.h = (M2 === r2 ? (g - b) / (M2 - m) + (g < b) * 6 : M2 === g ? (b - r2) / (M2 - m) + 2 : (r2 - g) / (M2 - m) + 4) * 60;
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   }
 
@@ -1368,7 +1381,8 @@ var plugin = (() => {
         res = { r: 2 * l - m1, g: 2 * l - m1, b: 2 * l - m1 };
     }
     res.mode = "rgb";
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   }
 
@@ -1382,7 +1396,8 @@ var plugin = (() => {
     };
     if (M2 - m !== 0)
       res.h = (M2 === r2 ? (g - b) / (M2 - m) + (g < b) * 6 : M2 === g ? (b - r2) / (M2 - m) + 2 : (r2 - g) / (M2 - m) + 4) * 60;
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   }
 
@@ -1407,7 +1422,8 @@ var plugin = (() => {
   );
   var parseHslLegacy = (color) => {
     let match = color.match(hsl_old);
-    if (!match) return;
+    if (!match)
+      return;
     let res = { mode: "hsl" };
     if (match[3] !== void 0) {
       res.h = +match[3];
@@ -1520,7 +1536,8 @@ var plugin = (() => {
         res = { r: v * (1 - s), g: v * (1 - s), b: v * (1 - s) };
     }
     res.mode = "rgb";
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   }
 
@@ -1534,7 +1551,8 @@ var plugin = (() => {
     };
     if (M2 - m !== 0)
       res.h = (M2 === r2 ? (g - b) / (M2 - m) + (g < b) * 6 : M2 === g ? (b - r2) / (M2 - m) + 2 : (r2 - g) / (M2 - m) + 4) * 60;
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   }
 
@@ -1587,14 +1605,17 @@ var plugin = (() => {
   // node_modules/culori/src/hwb/convertRgbToHwb.js
   function convertRgbToHwb(rgba) {
     let hsv2 = convertRgbToHsv(rgba);
-    if (hsv2 === void 0) return void 0;
+    if (hsv2 === void 0)
+      return void 0;
     let res = {
       mode: "hwb",
       w: (1 - hsv2.s) * hsv2.v,
       b: 1 - hsv2.v
     };
-    if (hsv2.h !== void 0) res.h = hsv2.h;
-    if (hsv2.alpha !== void 0) res.alpha = hsv2.alpha;
+    if (hsv2.h !== void 0)
+      res.h = hsv2.h;
+    if (hsv2.alpha !== void 0)
+      res.alpha = hsv2.alpha;
     return res;
   }
 
@@ -1798,7 +1819,8 @@ var plugin = (() => {
       a: c4 ? c4 * Math.cos(h / 180 * Math.PI) : 0,
       b: c4 ? c4 * Math.sin(h / 180 * Math.PI) : 0
     };
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   };
   var convertJchToJab_default = convertJchToJab;
@@ -2943,7 +2965,8 @@ var plugin = (() => {
       /* Apply default chroma from luma (subtract Y from B) */
       b: s - (l + m) / 2
     };
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   };
   var convertRgbToXyb_default = convertRgbToXyb;
@@ -2959,7 +2982,8 @@ var plugin = (() => {
       g: -3.2541473810744237 * l + 4.418770377582723 * m - 0.16462299650829934 * s,
       b: -3.6588512867136815 * l + 2.7129230459360922 * m + 1.9459282407775895 * s
     });
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   };
   var convertXybToRgb_default = convertXybToRgb;
@@ -3086,7 +3110,8 @@ var plugin = (() => {
       i: 0.59597799 * r2 - 0.2741761 * g - 0.32180189 * b,
       q: 0.21147017 * r2 - 0.52261711 * g + 0.31114694 * b
     };
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   };
   var convertRgbToYiq_default = convertRgbToYiq;
@@ -3099,7 +3124,8 @@ var plugin = (() => {
       g: y - 0.27137664 * i - 0.6486059 * q,
       b: y - 1.10561724 * i + 1.70250126 * q
     };
-    if (alpha !== void 0) res.alpha = alpha;
+    if (alpha !== void 0)
+      res.alpha = alpha;
     return res;
   };
   var convertYiqToRgb_default = convertYiqToRgb;
@@ -3341,8 +3367,10 @@ var plugin = (() => {
         if (number > 50 && number < 950) {
           number = Math.round(number / 25) * 25;
         }
-        if (number < 50) number = 50;
-        if (number > 950) number = 950;
+        if (number < 50)
+          number = 50;
+        if (number > 950)
+          number = 950;
         numbers.push(number);
       }
       const uniqueNumbers = [...new Set(numbers)].sort((a, b) => a - b);
