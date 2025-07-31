@@ -14,8 +14,6 @@ interface Color {
 interface PluginMessage {
   type: 'generate-scale' | 'add-to-figma';
   baseColor: string;
-  lightness: number;
-  chroma: number;
   steps: number;
   method: string;
   groupName?: string;
@@ -30,7 +28,7 @@ interface PluginResponse {
   defaultColor?: string;
 }
 
-// Default number of steps for consistent color scales (similar to Tailwind CSS)
+// Default number of steps for consistent color scales
 const DEFAULT_STEPS = 11; // 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950
 
 // Generate random color in OKLCH space
@@ -64,32 +62,11 @@ const easingFunctions = {
   'ease-in-out': (t: number) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
 };
 
-// Generate Tailwind-like monochromatic color scale
-function generateTailwindScale(baseColor: string, steps: number, lightness: number, chroma: number): string[] {
-  const parsed = oklch(baseColor);
-  if (!parsed) {
-    throw new Error('Invalid color format');
-  }
-
-  const lStart = 0.98;
-  const lEnd = 0.12;
-  const baseChroma = Math.min(0.5, parsed.c || 0);
-  const colors: string[] = [];
-
-  for (let i = 0; i < steps; i++) {
-    const t = i / (steps - 1);
-    const targetL = lStart + (lEnd - lStart) * t;
-    const l = parsed.l * (1 - lightness) + targetL * lightness;
-    const c = baseChroma * chroma * (1 - 0.8 * Math.abs(2 * t - 1));
-    colors.push(formatHex({ mode: 'oklch', l, c, h: parsed.h || 0 }));
-  }
-
-  return colors;
-}
 
 
 
-function generateColorScale(baseColor: string, steps: number, lightness: number, chroma: number, method: string, mode: 'light' | 'dark' = 'light'): string[] {
+
+function generateColorScale(baseColor: string, steps: number, method: string, mode: 'light' | 'dark' = 'light'): string[] {
   try {
     // Validate input parameters
     if (!baseColor || typeof baseColor !== 'string') {
@@ -100,14 +77,6 @@ function generateColorScale(baseColor: string, steps: number, lightness: number,
       throw new Error('Steps must be between 2 and 50');
     }
     
-    if (lightness < 0 || lightness > 1) {
-      throw new Error('Lightness must be between 0 and 1');
-    }
-    
-    if (chroma < 0 || chroma > 1) {
-      throw new Error('Chroma must be between 0 and 1');
-    }
-    
     // Parse the base color
     const parsedColor = oklch(baseColor);
     if (!parsedColor) {
@@ -116,9 +85,7 @@ function generateColorScale(baseColor: string, steps: number, lightness: number,
 
     console.log('Base color parsed:', parsedColor);
 
-    if (method === 'tailwind') {
-      return generateTailwindScale(baseColor, steps, lightness, chroma);
-    }
+
 
     // Generate a proper color scale from light to dark
     const colors: Color[] = [];
@@ -179,8 +146,8 @@ function generateColorScale(baseColor: string, steps: number, lightness: number,
         interpolatedLightness = minLightness + (maxLightness - minLightness) * easedT;
       }
       
-      // Apply lightness adjustment parameter
-      const finalLightness = minLightness + (interpolatedLightness - minLightness) * lightness;
+      // Use interpolated lightness directly
+      const finalLightness = interpolatedLightness;
       
       // Method-specific chroma curves for better results
       let chromaCurve: number;
@@ -232,7 +199,7 @@ function generateColorScale(baseColor: string, steps: number, lightness: number,
           minChroma = 0.05;
       }
       
-      const interpolatedChroma = adjustedBaseChroma * chromaCurve * chroma;
+      const interpolatedChroma = adjustedBaseChroma * chromaCurve;
       const finalChroma = isAchromatic ? 0 : Math.min(maxChroma, Math.max(minChroma, interpolatedChroma));
       
       // Final safety check for lightness bounds - allow more sacrifice of hue at light end
@@ -494,8 +461,6 @@ figma.ui.onmessage = async (msg: PluginMessage) => {
       const lightColors = generateColorScale(
         msg.baseColor,
         msg.steps,
-        msg.lightness,
-        msg.chroma,
         msg.method,
         'light'
       );
@@ -504,8 +469,6 @@ figma.ui.onmessage = async (msg: PluginMessage) => {
       const darkColors = generateColorScale(
         msg.baseColor,
         msg.steps,
-        msg.lightness,
-        msg.chroma,
         msg.method,
         'dark'
       );
@@ -521,8 +484,6 @@ figma.ui.onmessage = async (msg: PluginMessage) => {
       const lightColors = generateColorScale(
         msg.baseColor,
         msg.steps,
-        msg.lightness,
-        msg.chroma,
         msg.method,
         'light'
       );
@@ -532,8 +493,6 @@ figma.ui.onmessage = async (msg: PluginMessage) => {
         darkColors = generateColorScale(
           msg.baseColor,
           msg.steps,
-          msg.lightness,
-          msg.chroma,
           msg.method,
           'dark'
         );

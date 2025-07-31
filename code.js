@@ -3231,25 +3231,7 @@ var plugin = (() => {
     "ease-out": (t) => 1 - Math.pow(1 - t, 2),
     "ease-in-out": (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
   };
-  function generateTailwindScale(baseColor, steps, lightness, chroma) {
-    const parsed = oklch(baseColor);
-    if (!parsed) {
-      throw new Error("Invalid color format");
-    }
-    const lStart = 0.98;
-    const lEnd = 0.12;
-    const baseChroma = Math.min(0.5, parsed.c || 0);
-    const colors = [];
-    for (let i = 0; i < steps; i++) {
-      const t = i / (steps - 1);
-      const targetL = lStart + (lEnd - lStart) * t;
-      const l = parsed.l * (1 - lightness) + targetL * lightness;
-      const c4 = baseChroma * chroma * (1 - 0.8 * Math.abs(2 * t - 1));
-      colors.push(formatHex({ mode: "oklch", l, c: c4, h: parsed.h || 0 }));
-    }
-    return colors;
-  }
-  function generateColorScale(baseColor, steps, lightness, chroma, method, mode = "light") {
+  function generateColorScale(baseColor, steps, method, mode = "light") {
     try {
       if (!baseColor || typeof baseColor !== "string") {
         throw new Error("Base color is required");
@@ -3257,20 +3239,11 @@ var plugin = (() => {
       if (steps < 2 || steps > 50) {
         throw new Error("Steps must be between 2 and 50");
       }
-      if (lightness < 0 || lightness > 1) {
-        throw new Error("Lightness must be between 0 and 1");
-      }
-      if (chroma < 0 || chroma > 1) {
-        throw new Error("Chroma must be between 0 and 1");
-      }
       const parsedColor = oklch(baseColor);
       if (!parsedColor) {
         throw new Error("Invalid color format");
       }
       console.log("Base color parsed:", parsedColor);
-      if (method === "tailwind") {
-        return generateTailwindScale(baseColor, steps, lightness, chroma);
-      }
       const colors = [];
       const easing = easingFunctions[method] || easingFunctions.linear;
       const baseHue = parsedColor.h || 0;
@@ -3308,7 +3281,7 @@ var plugin = (() => {
         } else {
           interpolatedLightness = minLightness + (maxLightness - minLightness) * easedT;
         }
-        const finalLightness = minLightness + (interpolatedLightness - minLightness) * lightness;
+        const finalLightness = interpolatedLightness;
         let chromaCurve;
         let minChroma;
         switch (method) {
@@ -3342,7 +3315,7 @@ var plugin = (() => {
             chromaCurve = 0.3 + 0.7 * Math.sin(easedT * Math.PI);
             minChroma = 0.05;
         }
-        const interpolatedChroma = adjustedBaseChroma * chromaCurve * chroma;
+        const interpolatedChroma = adjustedBaseChroma * chromaCurve;
         const finalChroma = isAchromatic ? 0 : Math.min(maxChroma, Math.max(minChroma, interpolatedChroma));
         const minBound = isCatmullRom ? 0.01 : 0.03;
         const maxBound = isCatmullRom ? 0.999 : 0.99;
@@ -3526,16 +3499,12 @@ var plugin = (() => {
         const lightColors = generateColorScale(
           msg.baseColor,
           msg.steps,
-          msg.lightness,
-          msg.chroma,
           msg.method,
           "light"
         );
         const darkColors = generateColorScale(
           msg.baseColor,
           msg.steps,
-          msg.lightness,
-          msg.chroma,
           msg.method,
           "dark"
         );
@@ -3549,8 +3518,6 @@ var plugin = (() => {
         const lightColors = generateColorScale(
           msg.baseColor,
           msg.steps,
-          msg.lightness,
-          msg.chroma,
           msg.method,
           "light"
         );
@@ -3559,8 +3526,6 @@ var plugin = (() => {
           darkColors = generateColorScale(
             msg.baseColor,
             msg.steps,
-            msg.lightness,
-            msg.chroma,
             msg.method,
             "dark"
           );
